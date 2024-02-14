@@ -1,0 +1,10 @@
+azure-mgmt-resource
+azure-mgmt-subscription
+azure-mgmt-network
+azure-mgmt-compute
+azure-mgmt-recoveryservices
+azure-mgmt-recoveryservicesbackup
+azure-mgmt-sql
+azure.identity
+uuid
+lxml

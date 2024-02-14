@@ -23,7 +23,7 @@ We aim to support all major cloud providers. The following are currently on the 
 
 Different types of visualizations will be supported. These include:
 
-- **Draw.io**: You will be able to export your infrastructure diagrams to Draw.io format.
+- **Draw.io**: You will be able to export your infrastructure diagrams to Draw.io (XML) format.
 - **Visio**: Visio format will also be supported for those who prefer using Microsoft's tool.
 - **PDF**: For easy sharing and viewing, you will be able to export your diagrams to PDF.
 - **Markdown**: For simplicity and compatibility with platforms like GitHub, we will also support exporting diagrams in Markdown format.
