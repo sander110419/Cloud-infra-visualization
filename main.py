@@ -6,13 +6,13 @@ from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.sql import SqlManagementClient
 from lxml.etree import Element, SubElement, tostring
-from auth import authenticate
-from vm import handle_virtual_machine
-from nic import handle_network_interface
-from sql import handle_sql_server
-from sqldb import handle_sql_db
-from link import link_nics_to_vms, link_dbs_to_servers,link_disks_to_vms
-from disk import handle_disk
+from azure_func.auth import authenticate
+from azure_func.vm import handle_virtual_machine
+from azure_func.nic import handle_network_interface
+from azure_func.sql import handle_sql_server
+from azure_func.sqldb import handle_sql_db
+from azure_func.link import link_nics_to_vms, link_dbs_to_servers,link_disks_to_vms
+from azure_func.disk import handle_disk
 
 
 # Authenticate to Azure
