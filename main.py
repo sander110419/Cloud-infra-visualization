@@ -5,14 +5,25 @@ from azure.mgmt.subscription import SubscriptionClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.sql import SqlManagementClient
+from azure.mgmt.web import WebSiteManagementClient
+from azure.mgmt.keyvault import KeyVaultManagementClient
+from azure.mgmt.loganalytics import LogAnalyticsManagementClient
+from azure.mgmt.storage import StorageManagementClient
+
+
 from lxml.etree import Element, SubElement, tostring
 from azure_func.auth import authenticate
 from azure_func.vm import handle_virtual_machine
 from azure_func.nic import handle_network_interface
 from azure_func.sql import handle_sql_server
 from azure_func.sqldb import handle_sql_db
-from azure_func.link import link_nics_to_vms, link_dbs_to_servers,link_disks_to_vms
+from azure_func.link import link_nics_to_vms, link_dbs_to_servers,link_disks_to_vms,link_app_services_to_app_service_plans
 from azure_func.disk import handle_disk
+from azure_func.appservice import handle_app_service
+from azure_func.appserviceplan import handle_app_service_plan
+from azure_func.keyvault import handle_key_vault
+from azure_func.loganalytics import handle_log_analytics_workspace
+from azure_func.storageaccount import handle_storage_account
 
 
 # Authenticate to Azure
@@ -46,6 +57,11 @@ for subscription in subscriptions:
         network_client = NetworkManagementClient(credential, subscription)
         compute_client = ComputeManagementClient(credential, subscription)
         sql_client = SqlManagementClient(credential, subscription)
+        web_client = WebSiteManagementClient(credential, subscription)
+        kv_client = KeyVaultManagementClient(credential, subscription)
+        la_client = LogAnalyticsManagementClient(credential, subscription)
+        storage_client = StorageManagementClient(credential, subscription)
+
 
         # Step 3: Get all resource groups
         resource_groups = list(resource_client.resource_groups.list())
@@ -87,10 +103,27 @@ for subscription in subscriptions:
                 elif resource.type == "Microsoft.Compute/disks":
                     root_element, resource_node_ids = handle_disk(resource, rg, compute_client, root_element, resource_node_ids)
 
+                elif resource.type == "Microsoft.Web/sites":
+                    root_element, resource_node_ids = handle_app_service(resource, rg, web_client, root_element, resource_node_ids)
+
+                elif resource.type == "Microsoft.Web/serverfarms":
+                    root_element, resource_node_ids = handle_app_service_plan(resource, rg, web_client, root_element, resource_node_ids)
+
+                elif resource.type == 'Microsoft.KeyVault/vaults':
+                    root_element, resource_node_ids = handle_key_vault(resource, rg, kv_client, root_element, resource_node_ids)
+                
+                elif resource.type == 'Microsoft.OperationalInsights/workspaces':
+                    root_element, resource_node_ids = handle_log_analytics_workspace(resource, rg, la_client, root_element, resource_node_ids)
+
+                elif resource.type == 'Microsoft.Storage/storageAccounts':
+                    root_element, resource_node_ids = handle_storage_account(resource, rg, storage_client, root_element, resource_node_ids)
+
         #link resources that can be linked
         root_element = link_nics_to_vms(compute_client, network_client, resource_groups, root_element, resource_node_ids)
         root_element = link_dbs_to_servers(sql_client, resource_groups, root_element, resource_node_ids)
         root_element = link_disks_to_vms(compute_client, resource_groups, root_element, resource_node_ids)
+        root_element = link_app_services_to_app_service_plans(web_client, resource_groups, root_element, resource_node_ids)
+
 
     except Exception as e:
         print(f"An error occurred: {e}")

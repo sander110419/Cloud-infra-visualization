@@ -69,3 +69,21 @@ def link_disks_to_vms(compute_client, resource_groups, root_element, resource_no
                     edge.append(Element('mxGeometry', {'relative': '1', 'as': 'geometry'}))
 
     return root_element
+
+def link_app_services_to_app_service_plans(web_client, resource_groups, root_element, resource_node_ids):
+    for rg in resource_groups:
+        app_services = web_client.web_apps.list_by_resource_group(rg.name)
+        for app_service in app_services:
+            app_service_plan_id = app_service.server_farm_id.split('/')[-1]
+            app_service_plan = web_client.app_service_plans.get(rg.name, app_service_plan_id)
+
+            # Get the IDs of the App Service and App Service Plan nodes
+            app_service_id = resource_node_ids[app_service.name]
+            app_service_plan_id = resource_node_ids[app_service_plan.name]
+
+            # Create an edge between the App Service and App Service Plan nodes
+            print(f"Linked App Service {app_service_id} to App Service Plan {app_service_plan_id}")
+            edge = SubElement(root_element, 'mxCell', {'id': f'{app_service_id}-{app_service_plan_id}', 'value': '', 'edge': '1', 'source': app_service_id, 'target': app_service_plan_id, 'parent': '1'})
+            edge.append(Element('mxGeometry', {'relative': '1', 'as': 'geometry'}))
+
+    return root_element

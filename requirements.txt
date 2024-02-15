@@ -5,6 +5,9 @@ azure-mgmt-compute
 azure-mgmt-recoveryservices
 azure-mgmt-recoveryservicesbackup
 azure-mgmt-sql
+azure-mgmt-web
+azure-mgmt-keyvault
+azure-mgmt-loganalytics
 azure.identity
 uuid
 lxml

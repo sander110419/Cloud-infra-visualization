@@ -11,12 +11,12 @@ Azure:
 - [x] NIC
 - [x] SQL Server
 - [x] SQL Database
-- [ ] App Service Plans
-- [ ] App services
+- [x] App Service Plans
+- [x] App services
 - [ ] Recovery Services vault
 - [ ] Backups
-- [ ] Log Analytics workspace
-- [ ] Key vaults
+- [x] Log Analytics workspace
+- [x] Key vaults
 - [ ] Private endpoints
 - [ ] Storage accounts
 - [ ] ...
