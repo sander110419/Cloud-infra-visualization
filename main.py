@@ -61,6 +61,20 @@ for subscription in subscriptions:
         kv_client = KeyVaultManagementClient(credential, subscription)
         la_client = LogAnalyticsManagementClient(credential, subscription)
         storage_client = StorageManagementClient(credential, subscription)
+        sql_client = SqlManagementClient(credential, subscription)
+        cosmosdb_client = CosmosDBManagementClient(credential, subscription)
+        web_client = WebSiteManagementClient(credential, subscription)
+        apim_client = ApiManagementClient(credential, subscription)
+        datalake_store_client = DataLakeStoreAccountManagementClient(credential, subscription)
+        data_factory_client = DataFactoryManagementClient(credential, subscription)
+        stream_analytics_client = StreamAnalyticsManagementClient(credential, subscription)
+        ml_client = MachineLearningServicesManagementClient(credential, subscription)
+        kubernetes_client = ContainerServiceClient(credential, subscription)
+        keyvault_client = KeyVaultManagementClient(credential, subscription)
+        search_client = SearchManagementClient(credential, subscription)
+        signalr_client = SignalRManagementClient(credential, subscription)
+        bot_service_client = AzureBotService(credential, subscription)
+        iot_hub_client = IotHubClient(credential, subscription)
 
 
         # Step 3: Get all resource groups
@@ -117,6 +131,31 @@ for subscription in subscriptions:
 
                 elif resource.type == 'Microsoft.Storage/storageAccounts':
                     root_element, resource_node_ids = handle_storage_account(resource, rg, storage_client, root_element, resource_node_ids)
+
+                elif resource.type == 'Microsoft.ApiManagement/service':
+                    handle_api_management(resource, rg, apim_client, root_element, resource_node_ids)
+                elif resource.type == 'Microsoft.DataLakeStore/accounts':
+                    handle_data_lake_store(resource, rg, datalake_store_client, root_element, resource_node_ids)
+                elif resource.type == 'Microsoft.DataFactory/factories':
+                    handle_data_factory(resource, rg, data_factory_client, root_element, resource_node_ids)
+                elif resource.type == 'Microsoft.StreamAnalytics/streamingjobs':
+                    handle_stream_analytics_job(resource, rg, stream_analytics_client, root_element, resource_node_ids)
+                elif resource.type == 'Microsoft.MachineLearningServices/workspaces':
+                    handle_ml_workspace(resource, rg, ml_client, root_element, resource_node_ids)
+                elif resource.type == 'Microsoft.ContainerService/managedClusters':
+                    handle_kubernetes_service(resource, rg, kubernetes_client, root_element, resource_node_ids)
+                elif resource.type == 'Microsoft.DevOps/organizations/projects':
+                    handle_devops_project(resource, rg, devops_token, root_element, resource_node_ids)
+                elif resource.type == 'Microsoft.KeyVault/vaults':
+                    handle_key_vault(resource, rg, keyvault_client, root_element, resource_node_ids)
+                elif resource.type == 'Microsoft.Search/searchServices':
+                    handle_search_service(resource, rg, search_client, root_element, resource_node_ids)
+                elif resource.type == 'Microsoft.SignalRService/SignalR':
+                    handle_signalr_service(resource, rg, signalr_client, root_element, resource_node_ids)
+                elif resource.type == 'Microsoft.BotService/botServices':
+                    handle_bot_service(resource, rg, bot_service_client, root_element, resource_node_ids)
+                elif resource.type == 'Microsoft.Devices/IotHubs':
+                    handle_iot_hub(resource, rg, iot_hub_client, root_element, resource_node_ids)
 
         #link resources that can be linked
         root_element = link_nics_to_vms(compute_client, network_client, resource_groups, root_element, resource_node_ids)

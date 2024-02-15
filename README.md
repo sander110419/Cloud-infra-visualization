@@ -18,7 +18,9 @@ Azure:
 - [x] Log Analytics workspace
 - [x] Key vaults
 - [ ] Private endpoints
-- [ ] Storage accounts
+- [x] Storage accounts
+- [ ] Cosmos DB
+- [ ] Functions
 - [ ] ...
 
 Output:

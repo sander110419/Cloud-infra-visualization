@@ -8,6 +8,7 @@ azure-mgmt-sql
 azure-mgmt-web
 azure-mgmt-keyvault
 azure-mgmt-loganalytics
+azure-mgmt-storage
 azure.identity
 uuid
 lxml
