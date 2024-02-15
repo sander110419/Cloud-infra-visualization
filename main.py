@@ -6,17 +6,24 @@ from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.sql import SqlManagementClient
 from lxml.etree import Element, SubElement, tostring
+from auth import authenticate
+from vm import handle_virtual_machine
+from nic import handle_network_interface
+from sql import handle_sql_server
+from sqldb import handle_sql_db
+from link import link_nics_to_vms, link_dbs_to_servers,link_disks_to_vms
+from disk import handle_disk
 
-# Step 1: Authenticate to Azure
-tenant_id = "<your-tenant-id>"
-client_id = "<your-client-id>"
-client_secret = "<your-client-secret>"
 
-credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
+# Authenticate to Azure
+tenant_id = ""
+client_id = ""
+client_secret = ""
+
+credential = authenticate(tenant_id, client_id, client_secret)
 
 subscription_client = SubscriptionClient(credential)
 
-# Step 2: Get all subscriptions
 subscriptions = ["bf7c8d7a-ed8c-49d6-864d-8902cdbe1a97"]
 
 # Create root element for draw.io compatible XML
@@ -58,62 +65,37 @@ for subscription in subscriptions:
 
             # Add each resource to the diagram
             for resource in resources:
-                if resource.type != "Microsoft.Sql/servers":
-                    res_node_id = f"{resource.name}_{uuid.uuid4()}"
-                    resource_node_ids[resource.name] = res_node_id
-                    res_node = SubElement(root_element, 'mxCell', {'id': res_node_id, 'value': resource.name, 'vertex': '1', 'parent': '1'})
-                    res_node.append(Element('mxGeometry', {'width': '80', 'height': '30', 'as': 'geometry'}))
-                    edge = SubElement(root_element, 'mxCell', {'id': f'{node_id}-{res_node_id}', 'value': '', 'edge': '1', 'source': node_id, 'target': res_node_id, 'parent': '1'})
-                    edge.append(Element('mxGeometry', {'relative': '1', 'as': 'geometry'}))
-
-                    # Link NICs to VMs if the resource is a VM
-                    if resource.type == "Microsoft.Compute/virtualMachines":
-                        nics = network_client.network_interfaces.list_all()
-                        vm = compute_client.virtual_machines.get(rg.name, resource.name)
-
-                        for nic in nics:
-                            if vm.location == nic.location:
-                                if vm.network_profile.network_interfaces[0].id == nic.id:
-                                    print(f"Linked NIC {nic.name} to VM {vm.name}")
-                                    if nic.name not in resource_node_ids:
-                                        print(f"NIC {nic.name} not found in resource_node_ids. Adding it now.")
-                                        nic_id = f"{nic.name}_{uuid.uuid4()}"
-                                        resource_node_ids[nic.name] = nic_id
-                                        nic_node = SubElement(root_element, 'mxCell', {'id': nic_id, 'value': nic.name, 'vertex': '1', 'parent': '1'})
-                                        nic_node.append(Element('mxGeometry', {'width': '80', 'height': '30', 'as': 'geometry'}))
-                                    else:
-                                        nic_id = resource_node_ids[nic.name]
-                                    vm_id = resource_node_ids[vm.name]
-                                    edge = SubElement(root_element, 'mxCell', {'id': f'{nic_id}-{vm_id}', 'value': '', 'edge': '1', 'source': nic_id, 'target': vm_id, 'parent': '1'})
-                                    edge.append(Element('mxGeometry', {'relative': '1', 'as': 'geometry'}))
-
-            servers = sql_client.servers.list_by_resource_group(rg.name)
-            for server in servers:
-                # Create a node for the server
-                server_node_id = f"{server.name}_{uuid.uuid4()}"
-                resource_node_ids[server.name] = server_node_id
-                server_node = SubElement(root_element, 'mxCell', {'id': server_node_id, 'value': server.name, 'vertex': '1', 'parent': '1'})
-                server_node.append(Element('mxGeometry', {'width': '80', 'height': '30', 'as': 'geometry'}))
-                # Create an edge between the server and its resource group
-                edge = SubElement(root_element, 'mxCell', {'id': f'{node_id}-{server_node_id}', 'value': '', 'edge': '1', 'source': node_id, 'target': server_node_id, 'parent': '1'})
+                res_node_id = f"{resource.name}_{uuid.uuid4()}"
+                resource_node_ids[resource.name] = res_node_id
+                res_node = SubElement(root_element, 'mxCell', {'id': res_node_id, 'value': resource.name, 'vertex': '1', 'parent': '1'})
+                res_node.append(Element('mxGeometry', {'width': '80', 'height': '30', 'as': 'geometry'}))
+                edge = SubElement(root_element, 'mxCell', {'id': f'{node_id}-{res_node_id}', 'value': '', 'edge': '1', 'source': node_id, 'target': res_node_id, 'parent': '1'})
                 edge.append(Element('mxGeometry', {'relative': '1', 'as': 'geometry'}))
 
-                databases = sql_client.databases.list_by_server(rg.name, server.name)
-                for db in databases:
-                    # Create a node for the database
-                    db_node_id = f"{db.name}_{uuid.uuid4()}"
-                    resource_node_ids[db.name] = db_node_id
-                    db_node = SubElement(root_element, 'mxCell', {'id': db_node_id, 'value': db.name, 'vertex': '1', 'parent': '1'})
-                    db_node.append(Element('mxGeometry', {'width': '80', 'height': '30', 'as': 'geometry'}))
+                if resource.type == "Microsoft.Network/networkInterfaces":
+                    root_element, resource_node_ids = handle_network_interface(resource, rg, network_client, root_element, resource_node_ids)
 
-                    # Create an edge between the server and the database
-                    edge = SubElement(root_element, 'mxCell', {'id': f'{server_node_id}-{db_node_id}', 'value': '', 'edge': '1', 'source': server_node_id, 'target': db_node_id, 'parent': '1'})
-                    edge.append(Element('mxGeometry', {'relative': '1', 'as': 'geometry'}))
+                elif resource.type == "Microsoft.Compute/virtualMachines":
+                    root_element, resource_node_ids = handle_virtual_machine(resource, rg, compute_client, root_element, resource_node_ids)
+
+                elif resource.type == "Microsoft.Sql/servers":
+                    root_element, resource_node_ids = handle_sql_server(resource, rg, sql_client, root_element, resource_node_ids)
+                
+                elif resource.type == "Microsoft.Sql/servers/databases":
+                    root_element, resource_node_ids = handle_sql_db(resource, rg, sql_client, root_element, resource_node_ids)
+
+                elif resource.type == "Microsoft.Compute/disks":
+                    root_element, resource_node_ids = handle_disk(resource, rg, compute_client, root_element, resource_node_ids)
+
+        #link resources that can be linked
+        root_element = link_nics_to_vms(compute_client, network_client, resource_groups, root_element, resource_node_ids)
+        root_element = link_dbs_to_servers(sql_client, resource_groups, root_element, resource_node_ids)
+        root_element = link_disks_to_vms(compute_client, resource_groups, root_element, resource_node_ids)
 
     except Exception as e:
         print(f"An error occurred: {e}")
 
 # Write XML to file
 xml_str = tostring(mxfile, pretty_print=True).decode()
-with open('test-output/azure_resources.xml', 'w') as f:
+with open('azure_resources.xml', 'w') as f:
     f.write(xml_str)
