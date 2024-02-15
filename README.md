@@ -2,6 +2,31 @@
 
 Cloud-infra-visualization is an open-source tool designed to programmatically create infrastructure designs and diagrams for all major cloud vendors. This project aims to simplify the process of visualizing your cloud infrastructure, making it easier to understand and manage.
 
+## Currently implemented
+
+Azure:
+- [x] Authentication
+- [x] VM
+- [x] Disk
+- [x] NIC
+- [x] SQL Server
+- [x] SQL Database
+- [ ] App Service Plans
+- [ ] App services
+- [ ] Recovery Services vault
+- [ ] Backups
+- [ ] Log Analytics workspace
+- [ ] Key vaults
+- [ ] Private endpoints
+- [ ] Storage accounts
+- [ ] ...
+
+Output:
+- [x] Draw.IO
+- [ ] Visio
+- [ ] PDF
+
+
 ## Roadmap
 
 The roadmap for this project includes:
@@ -13,7 +38,7 @@ The project will be written in python and in the future contain a web front-end 
 
 ### Providers
 
-We aim to support all major cloud providers. The following are currently on the roadmap:
+The aim is to support all major cloud providers. The following are currently on the roadmap:
 
 - **Azure**: Support for Azure infrastructure
 - **AWS**: AWS infrastructure
@@ -27,6 +52,10 @@ Different types of visualizations will be supported. These include:
 - **Visio**: Visio format will also be supported for those who prefer using Microsoft's tool.
 - **PDF**: For easy sharing and viewing, you will be able to export your diagrams to PDF.
 - **Markdown**: For simplicity and compatibility with platforms like GitHub, we will also support exporting diagrams in Markdown format.
+
+## Future
+
+I'd love this to one day be a viable replacement for tools like Cloudockit, Holori or Lucidscale with a frontend for ease of use.
 
 ## License
 
