@@ -6,22 +6,44 @@ Cloud-infra-visualization is an open-source tool designed to programmatically cr
 
 Azure:
 - [x] Authentication
-- [x] VM
-- [x] Disk
-- [x] NIC
-- [x] SQL Server
-- [x] SQL Database
-- [x] App Service Plans
-- [x] App services
-- [ ] Recovery Services vault
-- [ ] Backups
-- [x] Log Analytics workspace
-- [x] Key vaults
-- [ ] Private endpoints
-- [x] Storage accounts
-- [ ] Cosmos DB
-- [ ] Functions
-- [ ] ...
+- [x] Resource
+- [x] Subscription
+- [x] Network
+- [x] Compute
+- [x] Recoveryservices
+- [x] Recoveryservicesback
+- [x] Sql
+- [x] Web
+- [x] Keyvault
+- [x] Loganalytics
+- [x] Storage
+- [x] Containerservice
+- [x] Apimanagement
+- [x] Batch
+- [x] Botservice
+- [x] Containerregistry
+- [x] Datafactory
+- [x] Datalake-store
+- [x] Eventhub
+- [x] Iothub
+- [x] Logic
+- [x] Machinelearningservi
+- [x] Redis
+- [x] Search
+- [x] Servicebus
+- [x] Signalr
+- [x] Streamanalytics
+- [x] Trafficmanager
+- [x] Cosmosdb
+- [x] Servicefabric
+- [x] Cdn
+- [x] Cognitiveservices
+- [x] Devtestlabs
+- [x] Media
+- [x] Monitor
+- [x] Relay
+- [x] Scheduler
+- [x] Dns
 
 Output:
 - [x] Draw.IO
