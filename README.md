@@ -26,7 +26,7 @@ Cloud-infra-visualization is an open-source tool designed to programmatically cr
 - [x] Datalake-store
 - [x] Eventhub
 - [x] Iothub
-- [x] Logic
+- [x] Logic apps
 - [x] Machinelearningservi
 - [x] Redis
 - [x] Search
@@ -44,10 +44,7 @@ Cloud-infra-visualization is an open-source tool designed to programmatically cr
 - [x] Relay
 - [x] Scheduler
 - [x] Dns
-- [] Functions
-- [] Logic Apps
-- [] Event Grid
-- [] PowerBI
+- [x] Event Grid
 
 ### Output:
 - [x] Draw.IO

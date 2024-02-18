@@ -34,6 +34,8 @@ from azure.mgmt.monitor import MonitorManagementClient
 from azure.mgmt.scheduler import SchedulerManagementClient
 from azure.mgmt.servicefabric import ServiceFabricManagementClient
 from azure.mgmt.dns import DnsManagementClient
+from azure.mgmt.eventgrid import EventGridManagementClient
+
 
 #import functions
 from azure_func.auth import authenticate
@@ -67,3 +69,4 @@ from azure_func.scheduler import handle_scheduler_job_collection
 from azure_func.servicefabric import handle_service_fabric_cluster
 from azure_func.vnet import handle_virtual_network
 from azure_func.dns import handle_dns_zone
+from azure_func.eventgrid import handle_event_grid

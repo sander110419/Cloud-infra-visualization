@@ -68,6 +68,7 @@ for subscription in subscriptions:
         devtest_client = azure_imports.DevTestLabsClient(credential, subscription)
         monitor_client = azure_imports.MonitorManagementClient(credential, subscription)
         scheduler_client = azure_imports.SchedulerManagementClient(credential, subscription)
+        event_grid_client = azure_imports.EventGridManagementClient(credential, subscription)
 
 
         # Step 3: Get all resource groups
@@ -149,6 +150,8 @@ for subscription in subscriptions:
                     root_element, resource_node_ids = azure_imports.handle_scheduler_job_collection(resource, rg, scheduler_client, root_element, resource_node_ids)
                 elif resource.type == 'Microsoft.DocumentDB/databaseAccounts':
                     root_element, resource_node_ids = azure_imports.handle_cosmosdb_account(resource, rg, cosmosdb_client, root_element, resource_node_ids)
+                elif resource.type == 'Microsoft.EventGrid/topics':
+                    root_element, resource_node_ids = azure_imports.handle_event_grid(resource, rg, event_grid_client, root_element, resource_node_ids)
 
         #link resources that can be linked
         root_element = azure_imports.link_nics_to_vms(compute_client, network_client, resource_groups, root_element, resource_node_ids)

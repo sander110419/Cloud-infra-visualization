@@ -35,7 +35,8 @@ azure-mgmt-media
 azure-mgmt-monitor
 azure-mgmt-relay
 azure-mgmt-scheduler
-azure-mgmt-dns
+azure-mgmt-eventgrid 
+azure-mgmt-dns 
 azure.identity
 uuid
 lxml
