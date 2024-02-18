@@ -1,7 +1,9 @@
 import uuid
 import argparse
-import azure_func.azure_imports as azure_imports
+from azure_func import azure_imports
+from azure_func.auth import authenticate
 from lxml.etree import Element, SubElement, tostring
+
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description='Azure authentication parameters')
@@ -17,9 +19,7 @@ client_id = args.client_id
 client_secret = args.client_secret
 
 credential = azure_imports.authenticate(tenant_id, client_id, client_secret)
-
 credential = azure_imports.authenticate(tenant_id, client_id, client_secret)
-
 subscription_client = azure_imports.SubscriptionClient(credential)
 
 subscriptions = ["bf7c8d7a-ed8c-49d6-864d-8902cdbe1a97"]
@@ -61,7 +61,6 @@ for subscription in subscriptions:
         signalr_client = azure_imports.SignalRManagementClient(credential, subscription)
         bot_service_client = azure_imports.AzureBotService(credential, subscription)
         iot_hub_client = azure_imports.IotHubClient(credential, subscription)
-        media_client = azure_imports.MediaServicesManagementClient(credential, subscription)
         cognitive_client = azure_imports.CognitiveServicesManagementClient(credential, subscription)
         dns_client = azure_imports.DnsManagementClient(credential, subscription)
         cdn_client = azure_imports.CdnManagementClient(credential, subscription)

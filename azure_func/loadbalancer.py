@@ -1,3 +1,5 @@
+from azure.mgmt.trafficmanager import TrafficManagerManagementClient
+
 from lxml.etree import Element, SubElement, tostring
 import uuid
 

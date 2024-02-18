@@ -1,4 +1,6 @@
 from azure.mgmt.iothub import IotHubClient
+from lxml.etree import Element, SubElement, tostring
+import uuid
 
 def handle_iot_hub(resource, rg, iot_hub_client, root_element, resource_node_ids):
     # Get the IoT Hub
