@@ -1,3 +1,4 @@
 azure_resources.xml
 __pycache__
 .$azure_resources.xml.dtmp
+.vscode/settings.json

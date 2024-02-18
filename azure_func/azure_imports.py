@@ -37,7 +37,6 @@ from azure.mgmt.dns import DnsManagementClient
 from azure.mgmt.eventgrid import EventGridManagementClient
 
 
-#import functions
 from azure_func.auth import authenticate
 from azure_func.vm import handle_virtual_machine
 from azure_func.nic import handle_network_interface
