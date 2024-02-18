@@ -19,7 +19,6 @@ client_id = args.client_id
 client_secret = args.client_secret
 
 credential = azure_imports.authenticate(tenant_id, client_id, client_secret)
-credential = azure_imports.authenticate(tenant_id, client_id, client_secret)
 subscription_client = azure_imports.SubscriptionClient(credential)
 
 subscriptions = ["bf7c8d7a-ed8c-49d6-864d-8902cdbe1a97"]
