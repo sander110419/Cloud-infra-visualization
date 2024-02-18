@@ -44,6 +44,11 @@ Cloud-infra-visualization is an open-source tool designed to programmatically cr
 - [x] Relay
 - [x] Scheduler
 - [x] Dns
+- [] Dns
+- [] Functions
+- [] Logic Apps
+- [] Event Grid
+- [] PowerBI
 
 ### Output:
 - [x] Draw.IO
