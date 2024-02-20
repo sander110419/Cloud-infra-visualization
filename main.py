@@ -10,6 +10,7 @@ parser = argparse.ArgumentParser(description='Azure authentication parameters')
 parser.add_argument('--tenant_id', type=str, required=True, help='Tenant ID')
 parser.add_argument('--client_id', type=str, required=True, help='Client ID')
 parser.add_argument('--client_secret', type=str, required=True, help='Client Secret')
+parser.add_argument('--subscription_id', type=str, required=False, help='Subscription ID')
 
 args = parser.parse_args()
 
@@ -21,7 +22,11 @@ client_secret = args.client_secret
 credential = azure_imports.authenticate(tenant_id, client_id, client_secret)
 subscription_client = azure_imports.SubscriptionClient(credential)
 
-subscriptions = ["bf7c8d7a-ed8c-49d6-864d-8902cdbe1a97"]
+# Use provided subscription ID or get all subscriptions
+if args.subscription_id:
+    subscriptions = [args.subscription_id]
+else:
+    subscriptions = [sub.subscription_id for sub in subscription_client.subscriptions.list()]
 
 # Create root element for draw.io compatible XML
 mxfile = Element('mxfile')

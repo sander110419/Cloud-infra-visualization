@@ -56,7 +56,8 @@ Cloud-infra-visualization is an open-source tool designed to programmatically cr
 ## :rocket: How to run
 
 You can run the script as following:  
-`main.py --tenant_id TENANT_ID --client_id CLIENT_ID --client_secret CLIENT_SECRET`  
+`main.py --tenant_id TENANT_ID --client_id CLIENT_ID --client_secret CLIENT_SECRET --subscription_id SUBSCRIPTION_ID`
+If you do not add a subscription ID it will iterate over all avalable subscriptions.  
 This will output `azure_resources.xml` which you can import in draw.io  
 This contains an overview page, and a page per resource group containing only resources belonging to that resource group.
 In draw.io, go to arrange > layout > Org Chart for the currently most legible view.  
