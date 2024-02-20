@@ -7,7 +7,7 @@ def handle_sql_db(resource, rg, sql_client, root_element, resource_node_ids):
     server_name, database_name = resource.name.split('/')
     
     # Create a unique id for the database
-    db_id = f"{server_name}/{database_name}_{uuid.uuid4()}"
+    db_id = f"{server_name}/{database_name}"
     
     # Check if a DB node with the same id already exists
     if db_id in resource_node_ids:

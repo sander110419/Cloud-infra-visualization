@@ -3,6 +3,10 @@ from lxml.etree import Element, SubElement, tostring
 import uuid
 
 def handle_app_service(resource, rg, web_client, root_element, resource_node_ids):
+    # Check if the server has already been added
+    if resource.name in resource_node_ids:
+        print(f"Server {resource.name} already exists.")
+        return root_element, resource_node_ids
     # Check if resource.name contains a '/'
     if '/' in resource.name:
         # Split the resource name into app service plan name and web app name
