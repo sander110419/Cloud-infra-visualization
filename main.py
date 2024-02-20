@@ -42,9 +42,6 @@ for subscription in subscriptions:
         resource_client = azure_imports.ResourceManagementClient(credential, subscription)
         network_client = azure_imports.NetworkManagementClient(credential, subscription)
         compute_client = azure_imports.ComputeManagementClient(credential, subscription)
-        sql_client = azure_imports.SqlManagementClient(credential, subscription)
-        web_client = azure_imports.WebSiteManagementClient(credential, subscription)
-        kv_client = azure_imports.KeyVaultManagementClient(credential, subscription)
         la_client = azure_imports.LogAnalyticsManagementClient(credential, subscription)
         storage_client = azure_imports.StorageManagementClient(credential, subscription)
         sql_client = azure_imports.SqlManagementClient(credential, subscription)
@@ -119,8 +116,8 @@ for subscription in subscriptions:
                     root_element, resource_node_ids = azure_imports.handle_api_management(resource, rg, apim_client, root_element, resource_node_ids)
                 elif resource.type == 'Microsoft.DataLakeStore/accounts':
                     root_element, resource_node_ids = azure_imports.handle_data_lake_store(resource, rg, datalake_store_client, root_element, resource_node_ids)
-                elif resource.type == 'Microsoft.DataFactory/factories':
-                    root_element, resource_node_ids = azure_imports.handle_data_factory(resource, rg, data_factory_client, root_element, resource_node_ids)
+                #elif resource.type == 'Microsoft.DataFactory/factories': These get returned via handle_sql_server as well, why? Microsoft.
+                #    root_element, resource_node_ids = azure_imports.handle_data_factory(resource, rg, data_factory_client, root_element, resource_node_ids)
                 elif resource.type == 'Microsoft.StreamAnalytics/streamingjobs':
                     root_element, resource_node_ids = azure_imports.handle_stream_analytics_job(resource, rg, stream_analytics_client, root_element, resource_node_ids)
                 elif resource.type == 'Microsoft.ContainerService/managedClusters':
