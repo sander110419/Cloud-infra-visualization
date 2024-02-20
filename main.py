@@ -107,7 +107,7 @@ for subscription in subscriptions:
                 elif resource.type == "Microsoft.Web/serverfarms":
                     root_element, resource_node_ids = azure_imports.handle_app_service_plan(resource, rg, web_client, root_element, resource_node_ids)
                 elif resource.type == 'Microsoft.KeyVault/vaults':
-                    root_element, resource_node_ids = azure_imports.handle_key_vault(resource, rg, kv_client, root_element, resource_node_ids)
+                    root_element, resource_node_ids = azure_imports.handle_key_vault(resource, rg, keyvault_client, root_element, resource_node_ids)
                 elif resource.type == 'Microsoft.OperationalInsights/workspaces':
                     root_element, resource_node_ids = azure_imports.handle_log_analytics_workspace(resource, rg, la_client, root_element, resource_node_ids)
                 elif resource.type == 'Microsoft.Storage/storageAccounts':
