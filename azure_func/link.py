@@ -27,7 +27,7 @@ def link_dbs_to_servers(sql_client, resource_groups, root_element, resource_node
             for db in dbs:
                 # Get the IDs of the Server and DB nodes
                 server_id = resource_node_ids[server.name]
-                db_id = resource_node_ids[f"{server.name}/{db.name}"]  # Use the combined server and database name as the key
+                db_id = resource_node_ids[f"{db.name}"]  # Use the combined server and database name as the key
 
                 # Create an edge between the Server and DB nodes
                 print(f"Linked DB {db_id} to {server_id}")

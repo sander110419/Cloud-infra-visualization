@@ -3,6 +3,10 @@ from lxml.etree import Element, SubElement, tostring
 import uuid
 
 def handle_disk(resource, rg, compute_client, root_element, resource_node_ids):
+    # Check if a Disk node with the same name already exists
+    if resource.name in resource_node_ids:
+        print(f"Disk {resource.name} already exists, skipping...")
+        return root_element, resource_node_ids
     disk = compute_client.disks.get(rg.name, resource.name)
     print(f"Added Disk {disk.name}")
     disk_id = f"{disk.name}_{uuid.uuid4()}"

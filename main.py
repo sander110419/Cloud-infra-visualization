@@ -151,7 +151,8 @@ for subscription in subscriptions:
                     root_element, resource_node_ids = azure_imports.handle_cosmosdb_account(resource, rg, cosmosdb_client, root_element, resource_node_ids)
                 elif resource.type == 'Microsoft.EventGrid/topics':
                     root_element, resource_node_ids = azure_imports.handle_event_grid(resource, rg, event_grid_client, root_element, resource_node_ids)
-
+                elif resource.type == "Microsoft.Network/virtualNetworks":
+                    root_element, resource_node_ids = azure_imports.handle_virtual_network(resource, rg, network_client, root_element, resource_node_ids)
         #link resources that can be linked
         root_element = azure_imports.link_nics_to_vms(compute_client, network_client, resource_groups, root_element, resource_node_ids)
         root_element = azure_imports.link_dbs_to_servers(sql_client, resource_groups, root_element, resource_node_ids)

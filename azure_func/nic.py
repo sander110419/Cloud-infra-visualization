@@ -3,6 +3,11 @@ from lxml.etree import Element, SubElement, tostring
 import uuid
 
 def handle_network_interface(resource, rg, network_client, root_element, resource_node_ids):
+    # Check if a nic node with the same name already exists
+    if resource.name in resource_node_ids:
+        print(f"NIC {resource.name} already exists, skipping...")
+        return root_element, resource_node_ids
+    
     nic = network_client.network_interfaces.get(rg.name, resource.name)
     print(f"Added NIC {nic.name}")
     nic_id = f"{nic.name}_{uuid.uuid4()}"
