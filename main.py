@@ -73,6 +73,14 @@ for subscription in subscriptions:
         print(f"Found {len(resource_groups)} resource groups")
 
         for rg in resource_groups:
+            # Create a new diagram for each resource group
+            diagram_rg = SubElement(mxfile, 'diagram', {'id': str(uuid.uuid4()), 'name': rg.name})
+            root_rg = SubElement(diagram_rg, 'mxGraphModel', {'dx': '846', 'dy': '467', 'grid': '1', 'gridSize': '10', 'guides': '1', 'tooltips': '1', 'connect': '1', 'arrows': '1', 'fold': '1', 'page': '1', 'pageScale': '1', 'pageWidth': '827', 'pageHeight': '1169'})
+            root_element_rg = SubElement(root_rg, 'root')
+
+            # Add the root and default parent cells
+            SubElement(root_element_rg, 'mxCell', {'id': '0'})
+            SubElement(root_element_rg, 'mxCell', {'id': '1', 'parent': '0'})
             # Add each resource group as a node, added UUID because they are not always unique
             node_id = f"{rg.name}_{uuid.uuid4()}"
             node = SubElement(root_element, 'mxCell', {'id': node_id, 'value': rg.name, 'vertex': '1', 'parent': '1'})
@@ -87,10 +95,18 @@ for subscription in subscriptions:
             for resource in resources:
                 res_node_id = f"{resource.name}_{uuid.uuid4()}"
                 resource_node_ids[resource.name] = res_node_id
-                res_node = SubElement(root_element, 'mxCell', {'id': res_node_id, 'value': resource.name, 'vertex': '1', 'parent': '1'})
-                res_node.append(Element('mxGeometry', {'width': '80', 'height': '30', 'as': 'geometry'}))
-                edge = SubElement(root_element, 'mxCell', {'id': f'{node_id}-{res_node_id}', 'value': '', 'edge': '1', 'source': node_id, 'target': res_node_id, 'parent': '1'})
-                edge.append(Element('mxGeometry', {'relative': '1', 'as': 'geometry'}))
+
+                # Add to main page
+                res_node_main = SubElement(root_element, 'mxCell', {'id': res_node_id, 'value': resource.name, 'vertex': '1', 'parent': '1'})
+                res_node_main.append(Element('mxGeometry', {'width': '80', 'height': '30', 'as': 'geometry'}))
+                edge_main = SubElement(root_element, 'mxCell', {'id': f'{node_id}-{res_node_id}', 'value': '', 'edge': '1', 'source': node_id, 'target': res_node_id, 'parent': '1'})
+                edge_main.append(Element('mxGeometry', {'relative': '1', 'as': 'geometry'}))
+
+                # Add to resource group page
+                res_node_rg = SubElement(root_element_rg, 'mxCell', {'id': res_node_id, 'value': resource.name, 'vertex': '1', 'parent': '1'})
+                res_node_rg.append(Element('mxGeometry', {'width': '80', 'height': '30', 'as': 'geometry'}))
+                edge_rg = SubElement(root_element_rg, 'mxCell', {'id': f'{node_id}-{res_node_id}', 'value': '', 'edge': '1', 'source': node_id, 'target': res_node_id, 'parent': '1'})
+                edge_rg.append(Element('mxGeometry', {'relative': '1', 'as': 'geometry'}))
 
                 if resource.type == "Microsoft.Network/networkInterfaces":
                     root_element, resource_node_ids = azure_imports.handle_network_interface(resource, rg, network_client, root_element, resource_node_ids)
