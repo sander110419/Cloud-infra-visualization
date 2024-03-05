@@ -41,9 +41,15 @@ def handle_subnets(virtual_network, parent_id, root_element, resource_node_ids):
 
         # Link the Subnet to the Virtual Network
         link_vnet_to_subnet(parent_id, subnet_id, root_element)
+        
+    try:
+        # Get the VM
+        vm = compute_client.virtual_machines.get(rg.name, resource.name)
 
+        # Add the keys to the storage account dictionary
+        vm_dict = vm.as_dict()
 
-def link_vnet_to_subnet(vnet_id, subnet_id, root_element):
-    print(f"Linked VNet {vnet_id} to Subnet {subnet_id}")
-    edge = SubElement(root_element, 'mxCell', {'id': f'{vnet_id}-{subnet_id}', 'value': '', 'edge': '1', 'source': vnet_id, 'target': subnet_id, 'parent': '1'})
-    edge.append(Element('mxGeometry', {'relative': '1', 'as': 'geometry'}))
+        return vm_dict
+
+    except Exception as e:
+        return {'Error': str(e)}

@@ -1,17 +1,26 @@
 from azure.mgmt.sql import SqlManagementClient
-from lxml.etree import Element, SubElement, tostring
-import uuid
 
-def handle_sql_server(resource, rg, sql_client, root_element, resource_node_ids):
-    # Check if the server has already been added
-    if resource.name in resource_node_ids:
-        print(f"Server {resource.name} already exists.")
-        return root_element, resource_node_ids
+def handle_sql_server(resource, rg, sql_client):
+    try:
+        print("Getting SQL Server...")
+        # Get the sql_server
+        server = sql_client.servers.get(rg.name, resource.name)
 
-    server = sql_client.servers.get(rg.name, resource.name)
-    print(f"Added SQL Server {server.name}")
-    server_id = f"{server.name}_{uuid.uuid4()}"
-    resource_node_ids[server.name] = server_id
-    server_node = SubElement(root_element, 'mxCell', {'id': server_id, 'value': server.name, 'vertex': '1', 'parent': '1'})
-    server_node.append(Element('mxGeometry', {'width': '80', 'height': '30', 'as': 'geometry'}))
-    return root_element, resource_node_ids
+        # Add the keys to the app service plan dictionary
+        server_dict = server.as_dict()
+
+        print("Getting DBs...")
+        # Get the databases running on the server
+        dbs = sql_client.databases.list_by_server(rg.name, server.name)
+        
+        # Convert the databases to a list of dictionaries
+        db_list = [db.as_dict() for db in dbs]
+
+        # Add the databases to the server dictionary
+        server_dict['DBs'] = db_list
+
+        return server_dict
+
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return {'Error': str(e)}

@@ -37,10 +37,6 @@ azure-mgmt-relay
 azure-mgmt-scheduler
 azure-mgmt-eventgrid 
 azure-mgmt-dns 
-azure-data-tables
-azure-storage-file-share
-azure-storage-queue
-azure-storage-blob
 azure.identity
 uuid
 lxml
