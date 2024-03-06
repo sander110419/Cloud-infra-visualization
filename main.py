@@ -113,12 +113,14 @@ for subscription in subscriptions:
 
     except Exception as e:
         print(f"An error occurred: {e}")
-
+        
+#record endtime for json properties
 end_time = time.time()
 duration = end_time - start_time
 
 data['Properties']['Duration'] = duration
 
+#Output JSON
 with open('output.json', 'w') as f:
     json.dump(data, f, cls=CustomEncoder)
 
