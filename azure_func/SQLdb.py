@@ -16,5 +16,4 @@ def handle_sql_db(resource, rg, sql_client):
         return sql_databases_dict
 
     except Exception as e:
-        print(f"Error: {str(e)}")
-        return {'Error': str(e)} 
+        return {'Error': str(e)}

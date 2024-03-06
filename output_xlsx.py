@@ -10,8 +10,8 @@ def output_to_excel(data):
     index_sheet = wb.active
     index_sheet.title = "Index"
 
-    # Initialize a list to store resource types
-    resource_types = []
+    # Initialize a dictionary to store resource types and their columns
+    resource_types = {}
 
     # Iterate over subscriptions
     for subscription, resource_groups in data['Objects'].items():
@@ -25,21 +25,21 @@ def output_to_excel(data):
                 # Replace invalid characters in the resource type
                 safe_resource_type = resource_type.replace('/', '_')
 
-                # If the resource type is not yet in the list, create a new sheet and add headers
-                if safe_resource_type not in resource_types:
-                    resource_types.append(safe_resource_type)
-                    wb.create_sheet(title=safe_resource_type)
+                # Convert the details dictionary to a DataFrame and normalize it
+                df = pd.json_normalize(details)
 
-                    # Convert the details dictionary to a DataFrame and normalize it
-                    df = pd.json_normalize(details)
+                # If the resource type is not yet in the dictionary, create a new sheet and add headers
+                if safe_resource_type not in resource_types:
+                    resource_types[safe_resource_type] = df.columns.tolist()
+                    wb.create_sheet(title=safe_resource_type)
 
                     # Write the header to the worksheet
                     for row in dataframe_to_rows(df, index=False, header=True):
                         wb[safe_resource_type].append(row)
                         break  # We only want the header, so break after the first row
 
-                # Convert the details dictionary to a DataFrame and normalize it
-                df = pd.json_normalize(details)
+                # Reindex the DataFrame with the fixed set of columns
+                df = df.reindex(columns=resource_types[safe_resource_type])
 
                 # Append the DataFrame to the corresponding sheet
                 for row in dataframe_to_rows(df, index=False, header=False):

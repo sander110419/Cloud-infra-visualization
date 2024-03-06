@@ -1,8 +1,5 @@
-import argparse
 import json
-import datetime
 import time
-import pandas as pd
 from output_xlsx import output_to_excel
 from functions import parse_arguments, initialize_data, authenticate_to_azure, get_subscriptions, CustomEncoder
 from azure_func import azure_imports
@@ -78,8 +75,9 @@ for subscription in subscriptions:
             'Microsoft.DocumentDB/databaseAccounts' : (azure_imports.handle_cosmosdb_account, cosmosdb_client),
             'Microsoft.EventGrid/eventSubscriptions': (azure_imports.handle_event_grid, event_grid_client),
             'Microsoft.EventGrid/topics': (azure_imports.handle_event_grid, event_grid_client),
-            'Microsoft.RecoveryServices/vaults': (azure_imports.handle_recovery_services_vault, recovery_services_client)
-            # 'Microsoft.Network/virtualNetworks': (azure_imports.handle_virtual_network, network_client)
+            'Microsoft.RecoveryServices/vaults': (azure_imports.handle_recovery_services_vault, recovery_services_client),
+            'Microsoft.Network/virtualNetworks': (azure_imports.handle_vnet, network_client),
+            'Microsoft.Network/virtualNetworks/subnets': (azure_imports.handle_all_subnets, network_client)
         }
 
         # Step 3: Get all resource groups
@@ -113,7 +111,7 @@ for subscription in subscriptions:
 
     except Exception as e:
         print(f"An error occurred: {e}")
-        
+
 #record endtime for json properties
 end_time = time.time()
 duration = end_time - start_time

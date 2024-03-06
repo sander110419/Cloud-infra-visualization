@@ -66,8 +66,8 @@ from azure_func.loadbalancer import handle_load_balancer
 from azure_func.monitor import handle_monitor_action_group
 from azure_func.scheduler import handle_scheduler_job_collection
 from azure_func.servicefabric import handle_service_fabric_cluster
-from azure_func.vnet import handle_virtual_network
-from azure_func.vnet import handle_subnets
+from azure_func.vnet import handle_vnet
+from azure_func.subnet import handle_all_subnets
 from azure_func.dns import handle_dns_zone
 from azure_func.eventgrid import handle_event_grid
 from azure_func.RSV import handle_recovery_services_vault

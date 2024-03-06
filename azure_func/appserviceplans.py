@@ -12,5 +12,4 @@ def handle_app_service_plan(resource, rg, web_client):
         return app_service_plan_dict
 
     except Exception as e:
-        print(f"Error: {str(e)}")
         return {'Error': str(e)}
