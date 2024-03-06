@@ -37,6 +37,8 @@ azure-mgmt-relay
 azure-mgmt-scheduler
 azure-mgmt-eventgrid 
 azure-mgmt-dns 
+pandas
+openpyxl
 azure.identity
 uuid
 lxml

@@ -1,54 +1,20 @@
-import uuid
 import argparse
 import json
 import datetime
 import time
+import pandas as pd
+from output_xlsx import output_to_excel
+from functions import parse_arguments, initialize_data, authenticate_to_azure, get_subscriptions, CustomEncoder
 from azure_func import azure_imports
-from azure_func.auth import authenticate
-from lxml.etree import Element, SubElement, tostring
 
-class CustomEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, datetime.datetime):
-            return obj.isoformat()
-        elif hasattr(obj, 'as_dict'):
-            return obj.as_dict()
-        return super().default(obj)
-
-# Parse command line arguments
-parser = argparse.ArgumentParser(description='Azure authentication parameters')
-parser.add_argument('--tenant_id', type=str, required=True, help='Tenant ID')
-parser.add_argument('--client_id', type=str, required=True, help='Client ID')
-parser.add_argument('--client_secret', type=str, required=True, help='Client Secret')
-parser.add_argument('--subscription_id', type=str, required=False, help='Subscription ID')
-
-args = parser.parse_args()
-
-# Initialize JSON file
-start_time = time.time()
-
-data = {
-    'Properties': {
-        'ScriptVersion': '0.1',
-        'Datestamp': str(datetime.datetime.now()),
-        'Duration': None  # Will be updated at the end of the script
-    },
-    'Objects': {}
-}
-
-# Authenticate to Azure
-tenant_id = args.tenant_id
-client_id = args.client_id
-client_secret = args.client_secret
-
-credential = azure_imports.authenticate(tenant_id, client_id, client_secret)
-subscription_client = azure_imports.SubscriptionClient(credential)
-
-# Use provided subscription ID or get all subscriptions
-if args.subscription_id:
-    subscriptions = [args.subscription_id]
-else:
-    subscriptions = [sub.subscription_id for sub in subscription_client.subscriptions.list()]
+#parse arguments
+args = parse_arguments()
+#initialise data
+data, start_time = initialize_data()
+#authenticate to Azure
+credential, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, args.client_secret)
+#Get all subscriptions from erguments
+subscriptions = get_subscriptions(subscription_client, args.subscription_id)
 
 for subscription in subscriptions:
     try:
@@ -87,8 +53,10 @@ for subscription in subscriptions:
             'Microsoft.Network/networkInterfaces': (azure_imports.handle_network_interface, network_client),
             'Microsoft.Compute/virtualMachines': (azure_imports.handle_virtual_machine, compute_client),
             'Microsoft.Sql/servers': (azure_imports.handle_sql_server, sql_client),
+            'Microsoft.Sql/servers/databases': (azure_imports.handle_sql_db, sql_client),
             'Microsoft.Compute/disks': (azure_imports.handle_disk, compute_client),
             'Microsoft.Web/serverFarms': (azure_imports.handle_app_service_plan, web_client),
+            'Microsoft.Web/sites': (azure_imports.handle_appservices, web_client),
             'Microsoft.KeyVault/vaults': (azure_imports.handle_key_vault, keyvault_client),
             'Microsoft.OperationalInsights/workspaces': (azure_imports.handle_log_analytics_workspace, la_client),
             'Microsoft.Storage/storageAccounts': (azure_imports.handle_storage_account, storage_client),
@@ -153,3 +121,14 @@ data['Properties']['Duration'] = duration
 
 with open('output.json', 'w') as f:
     json.dump(data, f, cls=CustomEncoder)
+
+#Output to excel is requested
+if args.output_xlsx:
+    with open('output.json', 'w') as f:
+        json.dump(data, f, cls=CustomEncoder)
+
+    # Load your JSON data
+    with open('output.json') as f:
+        data = json.load(f)
+
+    output_to_excel(data)

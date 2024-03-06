@@ -42,10 +42,10 @@ from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
 from azure_func.auth import authenticate
 from azure_func.vm import handle_virtual_machine
 from azure_func.nic import handle_network_interface
-from azure_func.sql import handle_sql_server
+from azure_func.sqlserver import handle_sql_server
 from azure_func.link import link_nics_to_vms, link_dbs_to_servers,link_disks_to_vms,link_app_services_to_app_service_plans
 from azure_func.disk import handle_disk
-from azure_func.appservices import handle_app_service_plan
+from azure_func.appserviceplans import handle_app_service_plan
 from azure_func.keyvault import handle_key_vault
 from azure_func.loganalytics import handle_log_analytics_workspace
 from azure_func.storageaccount import handle_storage_account
@@ -71,3 +71,5 @@ from azure_func.vnet import handle_subnets
 from azure_func.dns import handle_dns_zone
 from azure_func.eventgrid import handle_event_grid
 from azure_func.RSV import handle_recovery_services_vault
+from azure_func.SQLdb import handle_sql_db
+from azure_func.appservice import handle_appservices

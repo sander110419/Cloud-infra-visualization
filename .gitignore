@@ -4,3 +4,4 @@ __pycache__
 .vscode/settings.json
 run.ps1
 output.json
+output.xlsx
