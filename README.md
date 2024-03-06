@@ -3,51 +3,51 @@
 Cloud-infra-visualization is an open-source tool designed to programmatically create infrastructure designs and diagrams for all major cloud vendors. This project aims to simplify the process of visualizing your cloud infrastructure, making it easier to understand and manage.
 
 ## :white_check_mark: Currently implemented
-
-### Azure:
-- [x] Authentication
-- [x] Resource
-- [x] Subscription
-- [x] Network
-- [x] Compute
-- [x] Recoveryservices
-- [x] Recoveryservicesback
-- [x] Sql
-- [x] Web
-- [x] Keyvault
-- [x] Loganalytics
-- [x] Storage
-- [x] Containerservice
-- [x] Apimanagement
-- [x] Batch
-- [x] Botservice
-- [x] Containerregistry
-- [x] Datafactory
-- [x] Datalake-store
-- [x] Eventhub
-- [x] Iothub
-- [x] Logic apps
-- [x] Machinelearningservi
-- [x] Redis
-- [x] Search
-- [x] Servicebus
-- [x] Signalr
-- [x] Streamanalytics
-- [x] Trafficmanager
-- [x] Cosmosdb
-- [x] Servicefabric
-- [x] Cdn
-- [x] Cognitiveservices
-- [x] Devtestlabs
-- [x] Media
-- [x] Monitor
-- [x] Relay
-- [x] Scheduler
-- [x] Dns
-- [x] Event Grid
-- [x] Vnet
-- [x] Subnet
-
+<details>
+  <summary>Azure (Click me)</summary>
+    - [x] Authentication
+    - [x] Resource
+    - [x] Subscription
+    - [x] Network
+    - [x] Compute
+    - [x] Recoveryservices
+    - [x] Recoveryservicesback
+    - [x] Sql
+    - [x] Web
+    - [x] Keyvault
+    - [x] Loganalytics
+    - [x] Storage
+    - [x] Containerservice
+    - [x] Apimanagement
+    - [x] Batch
+    - [x] Botservice
+    - [x] Containerregistry
+    - [x] Datafactory
+    - [x] Datalake-store
+    - [x] Eventhub
+    - [x] Iothub
+    - [x] Logic apps
+    - [x] Machinelearningservi
+    - [x] Redis
+    - [x] Search
+    - [x] Servicebus
+    - [x] Signalr
+    - [x] Streamanalytics
+    - [x] Trafficmanager
+    - [x] Cosmosdb
+    - [x] Servicefabric
+    - [x] Cdn
+    - [x] Cognitiveservices
+    - [x] Devtestlabs
+    - [x] Media
+    - [x] Monitor
+    - [x] Relay
+    - [x] Scheduler
+    - [x] Dns
+    - [x] Event Grid
+    - [x] Vnet
+    - [x] Subnet
+</details>
 ### Output:
 - [x] Draw.IO
 - [ ] Visio
