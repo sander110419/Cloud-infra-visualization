@@ -13,6 +13,9 @@ def output_to_excel(data):
     # Initialize a dictionary to store resource types and their columns
     resource_types = {}
 
+    # Define the fixed order of the first three columns
+    fixed_columns_order = ['type', 'id', 'name']
+
     # Iterate over subscriptions
     for subscription, resource_groups in data['Objects'].items():
         # Iterate over resource groups
@@ -28,13 +31,28 @@ def output_to_excel(data):
                 # Convert the details dictionary to a DataFrame and normalize it
                 df = pd.json_normalize(details)
 
+                # Ensure 'type', 'id', and 'name' columns exist in the DataFrame
+                for column in fixed_columns_order:
+                    if column not in df.columns:
+                        df[column] = ''
+
                 # If the resource type is not yet in the dictionary, create a new sheet and add headers
+                # If the safe_resource_type is longer than 31 characters, truncate it
+                if len(safe_resource_type) > 31:
+                    safe_resource_type = safe_resource_type[:30]
+
                 if safe_resource_type not in resource_types:
-                    resource_types[safe_resource_type] = df.columns.tolist()
+                    # Sort the columns so that columns starting with "tag." are at the end
+                    other_columns = [col for col in df.columns.tolist() if col not in fixed_columns_order and not col.startswith('tag.')]
+                    tag_columns = [col for col in df.columns.tolist() if col.startswith('tag.')]
+
+                    sorted_columns = fixed_columns_order + sorted(other_columns) + sorted(tag_columns)
+                    resource_types[safe_resource_type] = sorted_columns
+
                     wb.create_sheet(title=safe_resource_type)
 
                     # Write the header to the worksheet
-                    for row in dataframe_to_rows(df, index=False, header=True):
+                    for row in dataframe_to_rows(df[sorted_columns], index=False, header=True):
                         wb[safe_resource_type].append(row)
                         break  # We only want the header, so break after the first row
 

@@ -1,4 +1,4 @@
-from azure.mgmt.trafficmanager import TrafficManagerManagementClient
+from azure.mgmt.network import NetworkManagementClient
 
 def handle_load_balancer(resource, rg, network_client):
     try:

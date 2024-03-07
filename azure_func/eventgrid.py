@@ -1,13 +1,13 @@
 from azure.mgmt.eventgrid import EventGridManagementClient
 
-def handle_event_grid(resource, rg, event_grid_client):
+def handle_event_grids(resource, rg, event_grid_client):
     try:
-       # Get the Event Grid
-        event_grid = event_grid_client.workflows.get(rg.name, resource.name)
-        print("Getting Event Grid...")
+        # Get the Event Grid Topic
+        event_grid_topic = event_grid_client.topics.get(rg.name, resource.name)
+        print("Getting Event Grid Topic...")
 
-        # Add the keys to the storage account dictionary
-        event_grid_dict = event_grid.as_dict()
+        # Add the keys to the Event Grid Topic dictionary
+        event_grid_dict = event_grid_topic.as_dict()
 
         return event_grid_dict
 
