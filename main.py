@@ -103,7 +103,6 @@ for subscription in subscriptions:
             'Microsoft.Compute/galleries' : (azure_imports.handle_image_galleries, compute_client),
             'Microsoft.Compute/images' : (azure_imports.handle_vm_images, compute_client),
             'Microsoft.Compute/snapshots' : (azure_imports.handle_vm_snapshot, compute_client),
-            'Microsoft.ContainerRegistry/registries' : (azure_imports.handle_container_images, container_registry_client),
             'Microsoft.Network/publicIPAddresses' : (azure_imports.handle_public_ip, network_client),
             'Microsoft.Web/certificates' : (azure_imports.handle_web_certificate, web_client),
             'Microsoft.Web/connections' : (azure_imports.handle_web_connections, web_client),
@@ -117,7 +116,15 @@ for subscription in subscriptions:
             'Microsoft.Compute/virtualMachines/extensions' : (azure_imports.handle_vm_extensions, compute_client),
             'Microsoft.Sql/managedInstances/databases' : (azure_imports.handle_sql_managed_instances_db, sql_client),
             #'Microsoft.DataMigration/SqlMigrationServices' : (azure_imports.handle_sql_migration_services, datamigration_client),
-            'Microsoft.Network/serviceEndpointPolicies' : (azure_imports.handle_service_endpoint_policy, network_client)
+            'Microsoft.Network/serviceEndpointPolicies' : (azure_imports.handle_service_endpoint_policy, network_client),
+            'Microsoft.Insights/components' : (azure_imports.handle_insights_components, monitor_client),
+            'Microsoft.Insights/metricalerts' : (azure_imports.handle_insights_metric_alerts, monitor_client),
+            'Microsoft.Insights/scheduledqueryrules' : (azure_imports.handle_insights_scheduled_query_rules, monitor_client),
+            'Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies' : (azure_imports.handle_application_gateway_waf_policies, network_client),
+            'Microsoft.Cdn/profiles/afdendpoints' : (azure_imports.handle_afd_endpoints, cdn_client),
+            'Microsoft.Network/routeTables' : (azure_imports.handle_route_tables, network_client),
+            'Microsoft.Compute/galleries/images/versions' : (azure_imports.handle_galleries_images_versions, compute_client),
+            'Microsoft.Compute/galleries/images' : (azure_imports.handle_galleries_images, compute_client)
         }
 
         # Step 3: Get all resource groups
