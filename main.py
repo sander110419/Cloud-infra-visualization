@@ -194,5 +194,5 @@ if args.output_xlsx:
     # Load your JSON data
     with open(f'{output_folder}/output.json') as f:
         data = json.load(f)
-
+    #write xlsx file
     output_to_excel(data)

@@ -24,6 +24,7 @@ def parse_arguments():
     parser.add_argument('--client_secret', type=str, required=True, help='Client Secret')
     parser.add_argument('--subscription_id', type=str, required=False, help='Subscription ID')
     parser.add_argument('--output_xlsx', action='store_true', help='Output to Excel')
+    parser.add_argument('--output_folder', type=str, required=False, help='Output Folder')
 
     return parser.parse_args()
 

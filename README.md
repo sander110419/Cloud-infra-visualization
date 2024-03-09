@@ -29,7 +29,7 @@ git clone https://github.com/sander110419/Cloud-infra-visualization.git
 cd Cloud-infra-visualization
 
 # Build the Docker image
-docker build -t Cloud-infra-visualization .
+docker build -t cloud-infra-visualization .
 
 # Run the Docker container
 docker run -v /path/to/your/output_folder:/app/output_folder Cloud-infra-visualization --tenant_id "your_tenant_id" --client_id "your_client_id" --client_secret "your_client_secret" --subscription_id "your_subscription_id" --output_xlsx
