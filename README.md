@@ -2,6 +2,10 @@
 
 Cloud-Infra-Visualization is an open-source tool designed to programmatically create infrastructure designs and diagrams for all major cloud vendors. This project aims to simplify the process of visualizing your cloud infrastructure, making it easier to understand and manage.
 
+[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/summary/new_code?id=sander110419_Cloud-infra-visualization)  
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=sander110419_Cloud-infra-visualization&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=sander110419_Cloud-infra-visualization)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=sander110419_Cloud-infra-visualization&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=sander110419_Cloud-infra-visualization)
+
 ## ✅ Currently Implemented Features
 
 ### Trello Board:
