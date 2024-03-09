@@ -10,11 +10,6 @@ Cloud-infra-visualization is an open-source tool designed to programmatically cr
 ### Azure:
 About 60 resources are already supported
 
-### Output:
-- [x] Draw.IO
-- [ ] Visio
-- [ ] PDF
-
 ## :rocket: How to run
 
 You can run the script as following:  
