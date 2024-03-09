@@ -10,7 +10,7 @@ def create_workbook():
     index_sheet.title = "Index"
     return wb, index_sheet
 
-def process_resource(resource, resource_types):
+def process_resource(resource):
     resource_type = resource['ResourceType'].replace('Microsoft.', '')
     details = resource['Details']
     safe_resource_type = resource_type.replace('/', '_')
@@ -48,7 +48,7 @@ def output_to_excel(data, output_folder):
     for subscription, resource_groups in data['Objects'].items():
         for rg_name, resources in resource_groups.items():
             for resource in resources:
-                safe_resource_type, df = process_resource(resource, resource_types)
+                safe_resource_type, df = process_resource(resource)
                 safe_resource_type, resource_types = update_resource_types(safe_resource_type, df, resource_types)
                 write_to_workbook(wb, safe_resource_type, df, resource_types)
     for resource_type in resource_types:
