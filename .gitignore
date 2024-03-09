@@ -2,3 +2,6 @@ azure_resources.xml
 __pycache__
 .$azure_resources.xml.dtmp
 .vscode/settings.json
+run.ps1
+output.json
+output.xlsx

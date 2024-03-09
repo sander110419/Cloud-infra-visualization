@@ -36,7 +36,14 @@ azure-mgmt-monitor
 azure-mgmt-relay
 azure-mgmt-scheduler
 azure-mgmt-eventgrid 
-azure-mgmt-dns 
+azure-mgmt-dns
+azure-mgmt-containerinstance
+azure-mgmt-storagesync
+azure-mgmt-communication
+azure-mgmt-datamigration
+azure-mgmt-alertsmanagement
+pandas
+openpyxl
 azure.identity
 uuid
 lxml

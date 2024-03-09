@@ -1,92 +1,60 @@
-# Cloud-infra-visualization :cloud:
+# Cloud-Infra-Visualization ☁️
 
-Cloud-infra-visualization is an open-source tool designed to programmatically create infrastructure designs and diagrams for all major cloud vendors. This project aims to simplify the process of visualizing your cloud infrastructure, making it easier to understand and manage.
+Cloud-Infra-Visualization is an open-source tool designed to programmatically create infrastructure designs and diagrams for all major cloud vendors. This project aims to simplify the process of visualizing your cloud infrastructure, making it easier to understand and manage.
 
-## :white_check_mark: Currently implemented
+## ✅ Currently Implemented Features
+
+### Trello Board:
+You can view our progress and upcoming features on our [Trello board](https://trello.com/b/wuSdQR4P/cloud-visualization-project).
 
 ### Azure:
-- [x] Authentication
-- [x] Resource
-- [x] Subscription
-- [x] Network
-- [x] Compute
-- [x] Recoveryservices
-- [x] Recoveryservicesback
-- [x] Sql
-- [x] Web
-- [x] Keyvault
-- [x] Loganalytics
-- [x] Storage
-- [x] Containerservice
-- [x] Apimanagement
-- [x] Batch
-- [x] Botservice
-- [x] Containerregistry
-- [x] Datafactory
-- [x] Datalake-store
-- [x] Eventhub
-- [x] Iothub
-- [x] Logic apps
-- [x] Machinelearningservi
-- [x] Redis
-- [x] Search
-- [x] Servicebus
-- [x] Signalr
-- [x] Streamanalytics
-- [x] Trafficmanager
-- [x] Cosmosdb
-- [x] Servicefabric
-- [x] Cdn
-- [x] Cognitiveservices
-- [x] Devtestlabs
-- [x] Media
-- [x] Monitor
-- [x] Relay
-- [x] Scheduler
-- [x] Dns
-- [x] Event Grid
-- [x] Vnet
-- [x] Subnet
+We currently support about 60 Azure resources.
 
-### Output:
-- [x] Draw.IO
-- [ ] Visio
-- [ ] PDF
+## 🚀 How to Run
 
-## :rocket: How to run
+You can run the script as follows:  
+```
+main.py --tenant_id TENANT_ID --client_id CLIENT_ID --client_secret CLIENT_SECRET --subscription_id SUBSCRIPTION_ID --output_xlsx --output_folder PATH_TO_OUTPUT_FOLDER
+``` 
+If you do not add a subscription ID, the script will iterate over all available subscriptions.  
+The `--output_xlsx` flag is optional and will output an xlsx overview of all resources and types.  
+The `--output_folder` flag is optional, if this is omitted, it will write to the current folder.
 
-You can run the script as following:  
-`main.py --tenant_id TENANT_ID --client_id CLIENT_ID --client_secret CLIENT_SECRET --subscription_id SUBSCRIPTION_ID`
-If you do not add a subscription ID it will iterate over all avalable subscriptions.  
-This will output `azure_resources.xml` which you can import in draw.io  
-This contains an overview page, and a page per resource group containing only resources belonging to that resource group.
-In draw.io, go to arrange > layout > Org Chart for the currently most legible view.  
+To build and run the Docker container with the provided Dockerfile, follow these steps:
 
-Currently following resources are linked as parent/child:
+```bash
+# Clone the repository
+git clone https://github.com/sander110419/Cloud-infra-visualization.git
 
-- VM - NIC
-- VM - Disk
-- Server - Database
-- App service plan - App service
+# Navigate into the cloned directory
+cd Cloud-infra-visualization
 
-## :pushpin: Roadmap
+# Build the Docker image
+docker build -t cloud-infra-visualization .
+
+# Run the Docker container
+docker run -v /path/to/your/output_folder:/app/output_folder cloud-infra-visualization --tenant_id "your_tenant_id" --client_id "your_client_id" --client_secret "your_client_secret" --subscription_id "your_subscription_id" --output_xlsx
+```
+Replace "/path/to/your/output_folder" with your actual output path.
+
+## 📌 Roadmap
 
 The roadmap for this project includes:
 
 ### Base
 
 The base of the project will be developed first, setting up the foundation for the rest of the features.
-The project will be written in python and in the future contain a web front-end for ease-of-use
+The project will be written in Python and in the future contain a web front-end for ease-of-use.
 
 ### Providers
 
 The aim is to support all major cloud providers. The following are currently on the roadmap:
 
-- **Azure**: Support for Azure infrastructure
-- **AWS**: AWS infrastructure
-- **Google**: Google Cloud Platform infrastructure
+- **Azure**: Support for Azure infrastructure.
+- **AWS**: AWS infrastructure.
+- **Google**: Google Cloud Platform infrastructure.
 
-### Visualisations
+### Visualizations
 
 Different types of visualizations will be supported. These include:
 
@@ -95,10 +63,10 @@ Different types of visualizations will be supported. These include:
 - **PDF**: For easy sharing and viewing, you will be able to export your diagrams to PDF.
 - **Markdown**: For simplicity and compatibility with platforms like GitHub, we will also support exporting diagrams in Markdown format.
 
-## :crystal_ball: Future
+## 🔮 Future
 
 I'd love this to one day be a viable replacement for tools like Cloudockit, Holori or Lucidscale with a frontend for ease of use.
 
-## :page_with_curl: License
+## 📜 License
 
 This project is available under the GPL-3.0 license.
