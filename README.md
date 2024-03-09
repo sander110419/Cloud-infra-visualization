@@ -14,10 +14,11 @@ We currently support about 60 Azure resources.
 
 You can run the script as follows:  
 ```
-main.py --tenant_id TENANT_ID --client_id CLIENT_ID --client_secret CLIENT_SECRET --subscription_id SUBSCRIPTION_ID --output_xlsx
+main.py --tenant_id TENANT_ID --client_id CLIENT_ID --client_secret CLIENT_SECRET --subscription_id SUBSCRIPTION_ID --output_xlsx --output_folder PATH_TO_OUTPUT_FOLDER
 ``` 
 If you do not add a subscription ID, the script will iterate over all available subscriptions.  
 The `--output_xlsx` flag is optional and will output an xlsx overview of all resources and types.  
+The `--output_folder` flag is optional, if this is omitted, it will write to the current folder.
 
 To build and run the Docker container with the provided Dockerfile, follow these steps:
 
@@ -32,7 +33,7 @@ cd Cloud-infra-visualization
 docker build -t cloud-infra-visualization .
 
 # Run the Docker container
-docker run -v /path/to/your/output_folder:/app/output_folder Cloud-infra-visualization --tenant_id "your_tenant_id" --client_id "your_client_id" --client_secret "your_client_secret" --subscription_id "your_subscription_id" --output_xlsx
+docker run -v /path/to/your/output_folder:/app/output_folder cloud-infra-visualization --tenant_id "your_tenant_id" --client_id "your_client_id" --client_secret "your_client_secret" --subscription_id "your_subscription_id" --output_xlsx
 ```
 Replace "/path/to/your/output_folder" with your actual output path.
 

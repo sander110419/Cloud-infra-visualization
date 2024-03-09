@@ -41,6 +41,7 @@ azure-mgmt-containerinstance
 azure-mgmt-storagesync
 azure-mgmt-communication
 azure-mgmt-datamigration
+azure-mgmt-alertsmanagement
 pandas
 openpyxl
 azure.identity
