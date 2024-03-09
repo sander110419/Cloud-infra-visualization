@@ -179,17 +179,20 @@ duration = end_time - start_time
 
 data['Properties']['Duration'] = duration
 
-#Output JSON
-with open('output.json', 'w') as f:
+# Get output folder from arguments
+output_folder = args.output_folder if args.output_folder else ''
+
+# Output JSON
+with open(f'{output_folder}/output.json', 'w') as f:
     json.dump(data, f, cls=CustomEncoder)
 
-#Output to excel is requested
+# Output to excel is requested
 if args.output_xlsx:
-    with open('output.json', 'w') as f:
+    with open(f'{output_folder}/output.json', 'w') as f:
         json.dump(data, f, cls=CustomEncoder)
 
     # Load your JSON data
-    with open('output.json') as f:
+    with open(f'{output_folder}/output.json') as f:
         data = json.load(f)
 
     output_to_excel(data)
