@@ -4,49 +4,11 @@ Cloud-infra-visualization is an open-source tool designed to programmatically cr
 
 ## :white_check_mark: Currently implemented
 
+### Trello board:
+[Click here](https://trello.com/b/wuSdQR4P/cloud-visualization-project)
+
 ### Azure:
-- [x] Authentication
-- [x] Resource
-- [x] Subscription
-- [x] Network
-- [x] Compute
-- [x] Recoveryservices
-- [x] Recoveryservicesback
-- [x] Sql
-- [x] Web
-- [x] Keyvault
-- [x] Loganalytics
-- [x] Storage
-- [x] Containerservice
-- [x] Apimanagement
-- [x] Batch
-- [x] Botservice
-- [x] Containerregistry
-- [x] Datafactory
-- [x] Datalake-store
-- [x] Eventhub
-- [x] Iothub
-- [x] Logic apps
-- [x] Machinelearningservi
-- [x] Redis
-- [x] Search
-- [x] Servicebus
-- [x] Signalr
-- [x] Streamanalytics
-- [x] Trafficmanager
-- [x] Cosmosdb
-- [x] Servicefabric
-- [x] Cdn
-- [x] Cognitiveservices
-- [x] Devtestlabs
-- [x] Media
-- [x] Monitor
-- [x] Relay
-- [x] Scheduler
-- [x] Dns
-- [x] Event Grid
-- [x] Vnet
-- [x] Subnet
+About 60 resources are already supported
 
 ### Output:
 - [x] Draw.IO
@@ -59,16 +21,6 @@ You can run the script as following:
 `main.py --tenant_id TENANT_ID --client_id CLIENT_ID --client_secret CLIENT_SECRET --subscription_id SUBSCRIPTION_ID --output_xlsx` 
 If you do not add a subscription ID it will iterate over all avalable subscriptions.  
 --output_xlsx is optional and will output an xlsx overview of all resources and types.  
-This will output `azure_resources.xml` which you can import in draw.io  
-This contains an overview page, and a page per resource group containing only resources belonging to that resource group.
-In draw.io, go to arrange > layout > Org Chart for the currently most legible view.  
-
-Currently following resources are linked as parent/child:
-
-- VM - NIC
-- VM - Disk
-- Server - Database
-- App service plan - App service
 
 ## :pushpin: Roadmap
 
