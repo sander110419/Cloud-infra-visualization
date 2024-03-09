@@ -8,7 +8,7 @@ Cloud-Infra-Visualization is an open-source tool designed to programmatically cr
 You can view our progress and upcoming features on our [Trello board](https://trello.com/b/wuSdQR4P/cloud-visualization-project).
 
 ### Azure:
-We currently support about 60 Azure resources.
+We currently support about 60 Azure resourcetypes.
 
 ## 🚀 How to Run
 
@@ -18,7 +18,7 @@ main.py --tenant_id TENANT_ID --client_id CLIENT_ID --client_secret CLIENT_SECRE
 ``` 
 If you do not add a subscription ID, the script will iterate over all available subscriptions.  
 The `--output_xlsx` flag is optional and will output an xlsx overview of all resources and types.  
-The `--output_folder` flag is optional, if this is omitted, it will write to the current folder.
+The `--output_folder` flag is optional, if this is omitted, it will write to an "output" folder in the current folder.
 
 To build and run the Docker container with the provided Dockerfile, follow these steps:
 
@@ -33,7 +33,7 @@ cd Cloud-infra-visualization
 docker build -t cloud-infra-visualization .
 
 # Run the Docker container
-docker run -v /path/to/your/output_folder:/app/output_folder cloud-infra-visualization --tenant_id "your_tenant_id" --client_id "your_client_id" --client_secret "your_client_secret" --subscription_id "your_subscription_id" --output_xlsx
+docker run -v /path/to/your/output_folder:/app/output cloud-infra-visualization --tenant_id "your_tenant_id" --client_id "your_client_id" --client_secret "your_client_secret" --subscription_id "your_subscription_id" --output_xlsx
 ```
 Replace "/path/to/your/output_folder" with your actual output path.
 

@@ -1,5 +1,6 @@
 import json
 import time
+import os
 from output_xlsx import output_to_excel
 from functions import parse_arguments, initialize_data, authenticate_to_azure, get_subscriptions, CustomEncoder
 from azure_func import azure_imports
@@ -180,19 +181,35 @@ duration = end_time - start_time
 data['Properties']['Duration'] = duration
 
 # Get output folder from arguments
-output_folder = args.output_folder if args.output_folder else ''
+output_folder = args.output_folder if args.output_folder else './output'
 
+# Create output directory if it does not exist
+try:
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+except Exception as e:
+    print(f"Error creating directory: {e}")
+
+# Assuming data is defined elsewhere
 # Output JSON
-with open(f'{output_folder}/output.json', 'w') as f:
-    json.dump(data, f, cls=CustomEncoder)
+try:
+    with open(f'{output_folder}/output.json', 'w') as f:
+        json.dump(data, f, cls=CustomEncoder)
+except Exception as e:
+    print(f"Error writing to JSON file: {e}")
 
 # Output to excel is requested
 if args.output_xlsx:
-    with open(f'{output_folder}/output.json', 'w') as f:
-        json.dump(data, f, cls=CustomEncoder)
-
     # Load your JSON data
-    with open(f'{output_folder}/output.json') as f:
-        data = json.load(f)
-    #write xlsx file
-    output_to_excel(data)
+    try:
+        with open(f'{output_folder}/output.json') as f:
+            data = json.load(f)
+    except Exception as e:
+        print(f"Error reading from JSON file: {e}")
+    
+    # Assuming output_to_excel is defined elsewhere
+    # Write xlsx file
+    try:
+        output_to_excel(data, output_folder)
+    except Exception as e:
+        print(f"Error writing to Excel file: {e}")
