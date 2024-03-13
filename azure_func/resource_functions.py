@@ -1104,10 +1104,10 @@ def handle_stream_analytics_job(resource, rg, stream_analytics_client):
     except Exception as e:
         return {'Error': str(e)}
     
-def handle_all_subnets(rg, network_client):
+def handle_all_subnets(resource, rg, network_client):
     try:
         # Get all Virtual Networks in the Resource Group
-        vnets = network_client.virtual_networks.list(rg.name)
+        vnets = network_client.virtual_networks.get(rg.name, resource.name)
         
         all_subnets = []
         
