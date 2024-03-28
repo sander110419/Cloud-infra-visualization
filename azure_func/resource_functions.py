@@ -956,7 +956,7 @@ def handle_signalr_service(resource, rg, signalr_client):
         # Add the keys to the storage account dictionary
         signalr_service_dict = signalr_service.as_dict()
 
-        return signalr_service
+        return signalr_service_dict
 
     except Exception as e:
         return {'Error': str(e)}
