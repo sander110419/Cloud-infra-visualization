@@ -1167,7 +1167,7 @@ def handle_virtual_machines_extensions(resource, rg, compute_client):
         vm_extensions_dict = {}
 
         # Iterate over each extension and add it to the dictionary
-        for extension in vm_extensions:
+        for extension in vm_extensions.value:
             vm_extensions_dict[extension.name] = extension.as_dict()
 
         return vm_extensions_dict

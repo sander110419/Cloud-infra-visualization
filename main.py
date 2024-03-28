@@ -155,7 +155,7 @@ for subscription in subscriptions:
 
             # Add each resource to the diagram
             for resource in resources:
-                print(resource.type)
+                #print(resource.type)
 
                 # Get the handler functions for this resource type
                 handler_infos = resource_handlers.get(resource.type)
@@ -164,7 +164,12 @@ for subscription in subscriptions:
                         handler, client_key = handler_info
                         client = clients[client_key]
                         # Call the handler function and get the data
+                        print(f"Calling {handler.__name__} for resource {resource.name}")
                         resource_data = handler(resource, rg, client)
+                        if 'Error' in resource_data:
+                            print(f"Error in {handler.__name__}: {resource_data['Error']}")
+                        #else:
+                        #    print(f"Finished calling {handler.__name__} for resource {resource.name}")
 
                         data['Objects'][subscription][rg.name].append({
                             'ResourceType': resource.type,
