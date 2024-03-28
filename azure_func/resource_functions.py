@@ -13,33 +13,33 @@ def handle_container_registry(resource, rg, container_registry_client):
     except Exception as e:
         return {'Error': str(e)}
     
-def handle_action_rules(resource, rg, alertsmanagement_client):
-    try:
-        # Get the Action Rule
-        action_rule = alertsmanagement_client.action_rules.get(rg.name, resource.name)
-        print("Getting Action Rule...")
+# def handle_action_rules(resource, rg, alertsmanagement_client):
+#     try:
+#         # Get the Action Rule
+#         action_rule = alertsmanagement_client.action_rules.get(rg.name, resource.name)
+#         print("Getting Action Rule...")
 
-        # Add the keys to the Action Rule dictionary
-        action_rule_dict = action_rule.as_dict()
+#         # Add the keys to the Action Rule dictionary
+#         action_rule_dict = action_rule.as_dict()
 
-        return action_rule_dict
+#         return action_rule_dict
 
-    except Exception as e:
-        return {'Error': str(e)}
+#     except Exception as e:
+#         return {'Error': str(e)}
 
-def handle_afd_endpoints(resource, rg, cdn_client):
-    try:
-        # Get the AFD Endpoint
-        afd_endpoint = cdn_client.afdendpoints.get(rg.name, resource.name)
-        print("Getting AFD Endpoint...")
+# def handle_afd_endpoints(resource, rg, cdn_client):
+#     try:
+#         # Get the AFD Endpoint
+#         afd_endpoint = cdn_client.afdendpoints.get(rg.name, resource.name)
+#         print("Getting AFD Endpoint...")
 
-        # Add the keys to the AFD endpoint dictionary
-        afd_endpoint_dict = afd_endpoint.as_dict()
+#         # Add the keys to the AFD endpoint dictionary
+#         afd_endpoint_dict = afd_endpoint.as_dict()
 
-        return afd_endpoint_dict
+#         return afd_endpoint_dict
 
-    except Exception as e:
-        return {'Error': str(e)}
+#     except Exception as e:
+#         return {'Error': str(e)}
 
 def handle_aks_service(resource, rg, aks_client):
     try:
@@ -71,19 +71,19 @@ def handle_api_management(resource, rg, apim_client):
         return {'Error': str(e)}
     
 
-def handle_application_gateway_waf_policies(resource, rg, network_client):
-    try:
-        # Get the Application Gateway WAF Policy
-        waf_policy = network_client.application_gateway_waf_policies.get(rg.name, resource.name)
-        print("Getting Application Gateway WAF Policy...")
+# def handle_application_gateway_waf_policies(resource, rg, network_client):
+#     try:
+#         # Get the Application Gateway WAF Policy
+#         waf_policy = network_client.application_gateway_waf_policies.get(rg.name, resource.name)
+#         print("Getting Application Gateway WAF Policy...")
 
-        # Add the keys to the WAF policy dictionary
-        waf_policy_dict = waf_policy.as_dict()
+#         # Add the keys to the WAF policy dictionary
+#         waf_policy_dict = waf_policy.as_dict()
 
-        return waf_policy_dict
+#         return waf_policy_dict
 
-    except Exception as e:
-        return {'Error': str(e)}
+#     except Exception as e:
+#         return {'Error': str(e)}
     
 def handle_app_service_plan(resource, rg, web_client):
     try:
@@ -183,20 +183,20 @@ def handle_cognitive_service(resource, rg, cognitive_client):
     except Exception as e:
         return {'Error': str(e)}
     
-def handle_communication_services(resource, rg, communication_client):
-    try:
-        print("Getting Communication Service...")
-        communication_services = communication_client.communication_service.list_by_resource_group(rg.name)
+# def handle_communication_services(resource, rg, communication_client):
+#     try:
+#         print("Getting Communication Service...")
+#         communication_services = communication_client.communication_service.list_by_resource_group(rg.name)
         
-        for service in communication_services:
-            if service.name == resource.name:
-                communication_service_dict = service.as_dict()
-                return communication_service_dict
+#         for service in communication_services:
+#             if service.name == resource.name:
+#                 communication_service_dict = service.as_dict()
+#                 return communication_service_dict
 
-        return {'Error': 'Communication Service not found'}
+#         return {'Error': 'Communication Service not found'}
 
-    except Exception as e:
-        return {'Error': str(e)}
+#     except Exception as e:
+#         return {'Error': str(e)}
     
 def handle_container_app(resource, rg, container_client):
     try:
@@ -452,19 +452,19 @@ def handle_disk(resource, rg, compute_client):
     except Exception as e:
         return {'Error': str(e)}
     
-def handle_private_dns_zones(resource, rg, network_client):
-    try:
-        # Get the Private DNS Zone
-        private_dns_zone = network_client.private_dns_zones.get(rg.name, resource.name)
-        print("Getting Private DNS Zone...")
+# def handle_private_dns_zones(resource, rg, network_client):
+#     try:
+#         # Get the Private DNS Zone
+#         private_dns_zone = network_client.private_dns_zones.get(rg.name, resource.name)
+#         print("Getting Private DNS Zone...")
 
-        # Add the keys to the Private DNS Zone dictionary
-        private_dns_zone_dict = private_dns_zone.as_dict()
+#         # Add the keys to the Private DNS Zone dictionary
+#         private_dns_zone_dict = private_dns_zone.as_dict()
 
-        return private_dns_zone_dict
+#         return private_dns_zone_dict
 
-    except Exception as e:
-        return {'Error': str(e)}
+#     except Exception as e:
+#         return {'Error': str(e)}
     
 def handle_event_grids(resource, rg, event_grid_client):
     try:
@@ -519,19 +519,19 @@ def handle_event_hub(resource, rg, eventhub_client):
     except Exception as e:
         return {'Error': str(e)}
     
-def handle_galleries_images_versions(resource, rg, compute_client):
-    try:
-        # Get the Gallery Image Version
-        gallery_image_version = compute_client.gallery_image_versions.get(rg.name, resource.name)
-        print("Getting Gallery Image Version...")
+# def handle_galleries_images_versions(resource, rg, compute_client):
+#     try:
+#         # Get the Gallery Image Version
+#         gallery_image_version = compute_client.gallery_image_versions.get(rg.name, resource.name)
+#         print("Getting Gallery Image Version...")
 
-        # Add the keys to the Gallery Image Version dictionary
-        gallery_image_version_dict = gallery_image_version.as_dict()
+#         # Add the keys to the Gallery Image Version dictionary
+#         gallery_image_version_dict = gallery_image_version.as_dict()
 
-        return gallery_image_version_dict
+#         return gallery_image_version_dict
 
-    except Exception as e:
-        return {'Error': str(e)}
+#     except Exception as e:
+#         return {'Error': str(e)}
     
 def handle_galleries_images(resource, rg, compute_client):
     try:
@@ -562,19 +562,19 @@ def handle_image_galleries(resource, rg, compute_client):
     except Exception as e:
         return {'Error': str(e)}
     
-def handle_insights_components(resource, rg, monitor_client):
-    try:
-        # Get the Insights Component
-        insights_component = monitor_client.components.get(rg.name, resource.name)
-        print("Getting Insights Component...")
+# def handle_insights_components(resource, rg, monitor_client):
+#     try:
+#         # Get the Insights Component
+#         insights_component = monitor_client.components.get(rg.name, resource.name)
+#         print("Getting Insights Component...")
 
-        # Add the keys to the insights component dictionary
-        insights_component_dict = insights_component.as_dict()
+#         # Add the keys to the insights component dictionary
+#         insights_component_dict = insights_component.as_dict()
 
-        return insights_component_dict
+#         return insights_component_dict
 
-    except Exception as e:
-        return {'Error': str(e)}
+#     except Exception as e:
+#         return {'Error': str(e)}
     
 def handle_insights_metric_alerts(resource, rg, monitor_client):
     try:
@@ -896,29 +896,29 @@ def handle_search_service(resource, rg, search_client):
     except Exception as e:
         return {'Error': str(e)}
     
-def handle_service_bus_queues(resource, rg, servicebus_client):
-    try:
-        # Get all Service Bus namespaces in the resource group
-        namespaces = servicebus_client.namespaces.list_by_resource_group(rg)
+# def handle_service_bus_queues(resource, rg, servicebus_client):
+#     try:
+#         # Get all Service Bus namespaces in the resource group
+#         namespaces = servicebus_client.namespaces.list_by_resource_group(rg)
 
-        print("Getting Service Bus namespaces...")
+#         print("Getting Service Bus namespaces...")
 
-        # Initialize an empty dictionary to store the Service Bus Queues
-        service_bus_queues_dict = {}
+#         # Initialize an empty dictionary to store the Service Bus Queues
+#         service_bus_queues_dict = {}
 
-        # Iterate over the namespaces
-        for namespace in namespaces:
-            # Get all Service Bus Queues in the current namespace
-            queues = servicebus_client.queues.list_by_namespace(rg, namespace.name)
-            # Iterate over the Queues
-            for queue in queues:
-                # Convert each Queue to a dictionary and add it to the main dictionary
-                service_bus_queues_dict[queue.name] = queue.as_dict()
+#         # Iterate over the namespaces
+#         for namespace in namespaces:
+#             # Get all Service Bus Queues in the current namespace
+#             queues = servicebus_client.queues.list_by_namespace(rg, namespace.name)
+#             # Iterate over the Queues
+#             for queue in queues:
+#                 # Convert each Queue to a dictionary and add it to the main dictionary
+#                 service_bus_queues_dict[queue.name] = queue.as_dict()
 
-        return service_bus_queues_dict
+#         return service_bus_queues_dict
 
-    except Exception as e:
-        return {'Error': str(e)}
+#     except Exception as e:
+#         return {'Error': str(e)}
     
 def handle_service_fabric_cluster(resource, rg, sf_client):
     try:
@@ -1018,26 +1018,26 @@ def handle_sql_managed_instances(resource, rg, sql_client):
     except Exception as e:
         return {'Error': str(e)}
     
-def handle_sql_managed_instances_db(resource, rg, sql_client):
-    try:
-        # Split the resource id to get the server name
-        resource_id_parts = resource.id.split('/')
-        server_name = resource_id_parts[resource_id_parts.index('servers') + 1]
+# def handle_sql_managed_instances_db(resource, rg, sql_client):
+#     try:
+#         # Split the resource id to get the server name
+#         resource_id_parts = resource.id.split('/')
+#         server_name = resource_id_parts[resource_id_parts.index('servers') + 1]
 
-        # Get all SQL databases for the given server
-        sql_databases = sql_client.databases.list_by_instance(rg.name, server_name)
-        print("Getting SQL Databases...")
+#         # Get all SQL databases for the given server
+#         sql_databases = sql_client.databases.list_by_instance(rg.name, server_name)
+#         print("Getting SQL Databases...")
 
-        # Initialize an empty dictionary
-        databases_dict = {}
+#         # Initialize an empty dictionary
+#         databases_dict = {}
 
-        # Iterate over each database and add it to the dictionary
-        for db in sql_databases:
-            databases_dict[db.name] = db.as_dict()
+#         # Iterate over each database and add it to the dictionary
+#         for db in sql_databases:
+#             databases_dict[db.name] = db.as_dict()
 
-        return databases_dict
-    except Exception as e:
-        return {'Error': str(e)}
+#         return databases_dict
+#     except Exception as e:
+#         return {'Error': str(e)}
     
 def handle_sql_server(resource, rg, sql_client):
     try:
