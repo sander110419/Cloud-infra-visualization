@@ -136,7 +136,7 @@ for subscription in subscriptions:
             'Microsoft.Network/routeTables' : [(handle_route_tables, 'network')],
             #'Microsoft.Compute/galleries/images/versions' : [(handle_galleries_images_versions, 'compute')],
             'microsoft.alertsmanagement/smartDetectorAlertRules' : [(handle_smart_detector_alert_rules, 'alertsmanagement')],
-            #'Microsoft.AlertsManagement/actionRules' : [(handle_action_rules, 'alertsmanagement')]
+            'Microsoft.AlertsManagement/actionRules' : [(handle_action_rules, 'alertsmanagement')]
         }
 
         # Step 3: Get all resource groups

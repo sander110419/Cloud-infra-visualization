@@ -13,19 +13,25 @@ def handle_container_registry(resource, rg, container_registry_client):
     except Exception as e:
         return {'Error': str(e)}
     
-# def handle_action_rules(resource, rg, alertsmanagement_client):
-#     try:
-#         # Get the Action Rule
-#         action_rule = alertsmanagement_client.action_rules.get(rg.name, resource.name)
-#         print("Getting Action Rule...")
+def handle_action_rules(resource, rg, alertsmanagement_client):
+    try:
+        print("Starting function...")
 
-#         # Add the keys to the Action Rule dictionary
-#         action_rule_dict = action_rule.as_dict()
+        # Get the Action Rule
+        print("Getting Action Rule...")
+        action_rule = alertsmanagement_client.action_rules.get_by_name(rg.name, resource.name)
+        print(f"Action Rule: {action_rule}")
 
-#         return action_rule_dict
+        # Add the keys to the Action Rule dictionary
+        print("Converting to dictionary...")
+        action_rule_dict = action_rule.as_dict()
+        print(f"Dictionary: {action_rule_dict}")
 
-#     except Exception as e:
-#         return {'Error': str(e)}
+        return action_rule_dict
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return {'Error': str(e)}
 
 # def handle_afd_endpoints(resource, rg, cdn_client):
 #     try:
