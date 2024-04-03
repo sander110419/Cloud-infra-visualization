@@ -132,7 +132,7 @@ for subscription in subscriptions:
             'Microsoft.Insights/metricalerts' : [(handle_insights_metric_alerts, 'monitor')],
             'Microsoft.Insights/scheduledqueryrules' : [(handle_insights_scheduled_query_rules, 'monitor')],
             #'Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies' : [(handle_application_gateway_waf_policies, 'network')],
-            #'Microsoft.Cdn/profiles/afdendpoints' : [(handle_afd_endpoints, 'cdn')],
+            # 'Microsoft.Cdn/profiles/afdendpoints' : [(handle_afd_endpoints, 'cdn')],
             'Microsoft.Network/routeTables' : [(handle_route_tables, 'network')],
             #'Microsoft.Compute/galleries/images/versions' : [(handle_galleries_images_versions, 'compute')],
             'microsoft.alertsmanagement/smartDetectorAlertRules' : [(handle_smart_detector_alert_rules, 'alertsmanagement')],

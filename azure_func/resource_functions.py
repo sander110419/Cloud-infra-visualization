@@ -20,13 +20,9 @@ def handle_action_rules(resource, rg, alertsmanagement_client):
         # Get the Action Rule
         print("Getting Action Rule...")
         action_rule = alertsmanagement_client.action_rules.get_by_name(rg.name, resource.name)
-        print(f"Action Rule: {action_rule}")
 
         # Add the keys to the Action Rule dictionary
-        print("Converting to dictionary...")
         action_rule_dict = action_rule.as_dict()
-        print(f"Dictionary: {action_rule_dict}")
-
         return action_rule_dict
 
     except Exception as e:
@@ -35,14 +31,20 @@ def handle_action_rules(resource, rg, alertsmanagement_client):
 
 # def handle_afd_endpoints(resource, rg, cdn_client):
 #     try:
-#         # Get the AFD Endpoint
-#         afd_endpoint = cdn_client.afdendpoints.get(rg.name, resource.name)
-#         print("Getting AFD Endpoint...")
+#         # Get the AFD Endpoint profiles in the rg
+#         afd_endpointprofile = cdn_client.ProfilesOperations.list_by_resource_group(rg.name)
+#         # Initialize an empty list for storing endpoint dictionaries
+#         afd_endpoint_dicts = []
+#         #get individual profiles
+#         for endpointprofile in afd_endpointprofile:
+#             afd_endpoint = cdn_client.afd_endpoints.list_by_profile(rg.name, endpointprofile.name)
+            
+#             # Loop through the iterator
+#             for endpoint in afd_endpoint:
+#                 # Convert each endpoint to a dictionary and add it to the list
+#                 afd_endpoint_dicts.append(endpoint.as_dict())
 
-#         # Add the keys to the AFD endpoint dictionary
-#         afd_endpoint_dict = afd_endpoint.as_dict()
-
-#         return afd_endpoint_dict
+#         return afd_endpoint_dicts
 
 #     except Exception as e:
 #         return {'Error': str(e)}
