@@ -191,20 +191,18 @@ def handle_cognitive_service(resource, rg, cognitive_client):
     except Exception as e:
         return {'Error': str(e)}
     
-# def handle_communication_services(resource, rg, communication_client):
-#     try:
-#         print("Getting Communication Service...")
-#         communication_services = communication_client.communication_service.list_by_resource_group(rg.name)
+def handle_communication_services(resource, rg, communication_client):
+    try:
+        print("Getting Communication Service...")
+        communication_services = communication_client.communication_services.get(rg.name, resource.name)
         
-#         for service in communication_services:
-#             if service.name == resource.name:
-#                 communication_service_dict = service.as_dict()
-#                 return communication_service_dict
+        communication_services_dict = communication_services.as_dict()
+        return communication_services_dict
 
-#         return {'Error': 'Communication Service not found'}
+        return {'Error': 'Communication Service not found'}
 
-#     except Exception as e:
-#         return {'Error': str(e)}
+    except Exception as e:
+        return {'Error': str(e)}
     
 def handle_container_app(resource, rg, container_client):
     try:
@@ -527,30 +525,35 @@ def handle_event_hub(resource, rg, eventhub_client):
     except Exception as e:
         return {'Error': str(e)}
     
-# def handle_galleries_images_versions(resource, rg, compute_client):
-#     try:
-#         # Get the Gallery Image Version
-#         gallery_image_version = compute_client.gallery_image_versions.get(rg.name, resource.name)
-#         print("Getting Gallery Image Version...")
+def handle_galleries_images_versions(resource, rg, compute_client):
+    try:
+        # Get the Gallery Image
+        gallery_image = compute_client.gallery_images.list_by_gallery(rg, resource)
+        print("Getting Gallery Image...")
+        imageversion_dict = {}
+        for gallery in gallery_image:
+            gallery_image_versions = compute_client.gallery_image_versions.list_by_gallery_image(rg, resource, gallery.name)
+            # Convert each lock to a dictionary and add it to the main dictionary
+            for imageversion in gallery_image_versions:
+                imageversion_dict[imageversion.name] = imageversion.as_dict()
 
-#         # Add the keys to the Gallery Image Version dictionary
-#         gallery_image_version_dict = gallery_image_version.as_dict()
 
-#         return gallery_image_version_dict
+        return imageversion_dict
 
-#     except Exception as e:
-#         return {'Error': str(e)}
+    except Exception as e:
+        return {'Error': str(e)}
     
 def handle_galleries_images(resource, rg, compute_client):
     try:
         # Get the Gallery Image
-        gallery_image = compute_client.gallery_images.get(rg.name, resource.name)
+        gallery_image = compute_client.gallery_images.list_by_gallery(rg.name, resource.name)
         print("Getting Gallery Image...")
+        gallery_dict = {}
+        for gallery in gallery_image:
+            # Convert each lock to a dictionary and add it to the main dictionary
+            gallery_dict[gallery.name] = gallery.as_dict()
 
-        # Add the keys to the Gallery Image dictionary
-        gallery_image_dict = gallery_image.as_dict()
-
-        return gallery_image_dict
+        return gallery_dict
 
     except Exception as e:
         return {'Error': str(e)}
@@ -985,14 +988,11 @@ def handle_smart_detector_alert_rules(resource, rg, alertsmanagement_client):
     
 def handle_sql_migration_services(resource, rg, datamigration_client):
     try:
-        # Get the SQL Migration Service
-        sql_migration_service = datamigration_client.services.get(rg.name, resource.name)
-        print("Getting SQL Migration Service...")
-
-        # Add the keys to the SQL Migration Service dictionary
-        sql_migration_service_dict = sql_migration_service.as_dict()
-
-        return sql_migration_service_dict
+        print("Getting Datamigration Service...")
+        sql_migration_services = datamigration_client.services.get(rg.name, resource.name)
+        
+        sql_migration_services_dict = sql_migration_services.as_dict()
+        return sql_migration_services_dict
 
     except Exception as e:
         return {'Error': str(e)}

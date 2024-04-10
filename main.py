@@ -53,7 +53,8 @@ client_classes = {
     'container_instance': azure_imports.ContainerInstanceManagementClient,
     'storage_sync': azure_imports.MicrosoftStorageSync,
     'communication': azure_imports.CommunicationServiceManagementClient,
-    'alertsmanagement': azure_imports.AlertsManagementClient
+    'alertsmanagement': azure_imports.AlertsManagementClient,
+    'datamigration': azure_imports.DataMigrationManagementClient
 }
 
 for subscription in subscriptions:
@@ -113,7 +114,7 @@ for subscription in subscriptions:
             'Microsoft.ContainerInstance/containerGroups' : [(handle_container_instance, 'container_instance')],
             'Microsoft.Network/loadBalancers' : [(handle_load_balancer, 'network')],
             'Microsoft.DataFactory/factories' : [(handle_data_factory, 'data_factory')],
-            #'Microsoft.Compute/galleries' : [(handle_image_galleries, 'compute')],
+            'Microsoft.Compute/galleries' : [(handle_image_galleries, 'compute')],
             'Microsoft.Compute/images' : [(handle_vm_images, 'compute')],
             'Microsoft.Compute/snapshots' : [(handle_vm_snapshot, 'compute')],
             'Microsoft.Network/publicIPAddresses' : [(handle_public_ip, 'network')],
@@ -127,7 +128,7 @@ for subscription in subscriptions:
             'Microsoft.Sql/virtualCluster' : [(handle_virtual_cluster, 'sql')],
             'Microsoft.Compute/restorePointCollections' : [(handle_restore_point_collections, 'compute')],
             #'Microsoft.Sql/managedInstances/databases' : [(handle_sql_managed_instances_db, 'sql')],
-            #'Microsoft.DataMigration/SqlMigrationServices' : [(handle_sql_migration_services, datamigration')],
+            'Microsoft.DataMigration/SqlMigrationServices' : [(handle_sql_migration_services, 'datamigration')],
             'Microsoft.Network/serviceEndpointPolicies' : [(handle_service_endpoint_policy, 'network')],
             #'Microsoft.Insights/components' : [(handle_insights_components, 'monitor')],
             'Microsoft.Insights/metricalerts' : [(handle_insights_metric_alerts, 'monitor')],
@@ -135,7 +136,8 @@ for subscription in subscriptions:
             #'Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies' : [(handle_application_gateway_waf_policies, 'network')],
             # 'Microsoft.Cdn/profiles/afdendpoints' : [(handle_afd_endpoints, 'cdn')],
             'Microsoft.Network/routeTables' : [(handle_route_tables, 'network')],
-            #'Microsoft.Compute/galleries/images/versions' : [(handle_galleries_images_versions, 'compute')],
+            'Microsoft.Compute/galleries/images' : [(handle_galleries_images, 'compute')],
+            'Microsoft.Compute/galleries/images/versions' : [(handle_galleries_images_versions, 'compute')],
             'microsoft.alertsmanagement/smartDetectorAlertRules' : [(handle_smart_detector_alert_rules, 'alertsmanagement')],
             'Microsoft.AlertsManagement/actionRules' : [(handle_action_rules, 'alertsmanagement')]
         }
