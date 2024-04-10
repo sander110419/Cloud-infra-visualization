@@ -347,10 +347,10 @@ def handle_communication_services(resource, rg, communication_client):
     except Exception as e:
         return {'Error': str(e)}
     
-def handle_container_app(resource, rg, container_client):
+def handle_container_app(resource, rg, containerapp_client):
     try:
         # Get the Container App
-        container_app = container_client.container_groups.get(rg.name, resource.name)
+        container_app = containerapp_client.container_apps.get(rg, resource)
         print("Getting Container App...")
 
         # Add the keys to the Container App dictionary

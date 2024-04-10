@@ -41,3 +41,4 @@ from azure.mgmt.resource.locks import ManagementLockClient
 from azure.mgmt.storagesync import MicrosoftStorageSync
 from azure.mgmt.communication import CommunicationServiceManagementClient
 from azure.mgmt.alertsmanagement import AlertsManagementClient
+from azure.mgmt.appcontainers import ContainerAppsAPIClient
