@@ -34,6 +34,12 @@ def update_resource_types(safe_resource_type, df, resource_types):
 def write_to_workbook(wb: Workbook, safe_resource_type: str, df, resource_types):
     if safe_resource_type not in wb.sheetnames:
         wb.create_sheet(title=safe_resource_type)
+        wb[safe_resource_type].insert_rows(0)
+        # Add a link to the index sheet at the top of the current sheet
+        cell = wb[safe_resource_type].cell(row=1, column=1)
+        cell.value = "Index"
+        cell.hyperlink = "#Index!A1"
+        cell.font = Font(color=Color('0563C1'), underline='single')
         for row in dataframe_to_rows(df[resource_types[safe_resource_type]], index=False, header=True):
             wb[safe_resource_type].append(row)
             break
@@ -41,15 +47,6 @@ def write_to_workbook(wb: Workbook, safe_resource_type: str, df, resource_types)
     for row in dataframe_to_rows(df, index=False, header=False):
         row = [str(cell) if isinstance(cell, list) else cell for cell in row]
         wb[safe_resource_type].append(row)
-
-    # Insert a new row at the top of the sheet
-    wb[safe_resource_type].insert_rows(0)
-
-    # Add a link to the index sheet at the top of the current sheet
-    cell = wb[safe_resource_type].cell(row=1, column=1)
-    cell.value = "Index"
-    cell.hyperlink = "#Index!A1"
-    cell.font = Font(color=Color('0563C1'), underline='single')
 
 def output_to_excel(data, output_folder):
     wb, index_sheet = create_workbook()
