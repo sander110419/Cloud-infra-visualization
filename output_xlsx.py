@@ -11,10 +11,21 @@ def create_workbook():
     return wb, index_sheet
 
 def process_resource(resource):
-    resource_type = resource['ResourceType'].replace('Microsoft.', '')
     details = resource['Details']
-    safe_resource_type = resource_type.replace('/', '_')
     df = pd.json_normalize(details)
+    
+    # Extract the 'type' field from the dataframe
+    resource_type_df = df['type'].values[0] if 'type' in df.columns else ''
+    
+    safe_resource_type_df = resource_type_df.replace('Microsoft.', '').replace('/', '_')
+    
+    # Fall back to using ResourceType if type field is empty
+    if not safe_resource_type_df:
+        resource_type = resource['ResourceType']
+        safe_resource_type = resource_type.replace('Microsoft.', '').replace('/', '_')
+    else:
+        safe_resource_type = safe_resource_type_df
+    
     fixed_columns_order = ['type', 'id', 'name']
     for column in fixed_columns_order:
         if column not in df.columns:

@@ -1,14 +1,17 @@
 import json
 import time
 import os
+import logging
 from output_xlsx import output_to_excel
-from functions import parse_arguments, initialize_data, authenticate_to_azure, get_subscriptions, CustomEncoder
+from functions import set_up_logging, parse_arguments, initialize_data, authenticate_to_azure, get_subscriptions, CustomEncoder
 from azure_func import azure_imports
 from tqdm import tqdm
 from azure_func.resource_functions import *
 
 #parse arguments
 args = parse_arguments()
+#set up logging
+set_up_logging(args.log_level)
 #initialise data
 data, start_time = initialize_data()
 #authenticate to Azure
@@ -55,7 +58,8 @@ client_classes = {
     'storage_sync': azure_imports.MicrosoftStorageSync,
     'communication': azure_imports.CommunicationServiceManagementClient,
     'alertsmanagement': azure_imports.AlertsManagementClient,
-    'datamigration': azure_imports.DataMigrationManagementClient
+    'datamigration': azure_imports.DataMigrationManagementClient,
+    'recovery_backup_items': azure_imports.RecoveryServicesBackupClient
 }
 total_resources = 0
 
@@ -75,13 +79,13 @@ for subscription in subscriptions:
         # Step 3: Get all resource groups
         resource_groups = list(resource_client.resource_groups.list())
 
-        print(f"Found {len(resource_groups)} resource groups")
+        logging.info(f"Found {len(resource_groups)} resource groups")
 
         for rg in resource_groups:
             # Get resources within the resource group
             resources = list(resource_client.resources.list_by_resource_group(rg.name))
 
-            print(f"Found {len(resources)} resources in resource group {rg.name}")
+            logging.info(f"Found {len(resources)} resources in resource group {rg.name}")
 
             total_resources += len(resources)
 
@@ -89,7 +93,7 @@ for subscription in subscriptions:
             data['Objects'][subscription][rg.name] = []
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logging.info(f"An error occurred: {e}")
 
 with tqdm(total=total_resources) as pbar:
 
@@ -135,7 +139,10 @@ with tqdm(total=total_resources) as pbar:
                 'Microsoft.DocumentDb/databaseAccounts' : [(handle_cosmosdb_account, 'cosmosdb')],
                 'Microsoft.EventGrid/eventSubscriptions': [(handle_event_grid_subscriptions, 'event_grid')],
                 'Microsoft.EventGrid/topics': [(handle_event_grids, 'event_grid')],
-                'Microsoft.RecoveryServices/vaults': [(handle_recovery_services_vault, 'recovery_services')],
+                'Microsoft.RecoveryServices/vaults': [
+                    (handle_recovery_services_vault, 'recovery_services'),
+                    (handle_recovery_services_vault_items, 'recovery_backup_items')
+                ],
                 'Microsoft.Network/virtualNetworks': [(handle_vnet, 'network')],
                 'Microsoft.Network/virtualNetworks/subnets': [(handle_all_subnets, 'network')],
                 'Microsoft.Network/privateEndpoints': [(handle_private_endpoint, 'network')],
@@ -181,22 +188,23 @@ with tqdm(total=total_resources) as pbar:
             # Step 3: Get all resource groups
             resource_groups = list(resource_client.resource_groups.list())
 
-            print(f"Found {len(resource_groups)} resource groups")
+            logging.info(f"Found {len(resource_groups)} resource groups")
 
             for rg in resource_groups:
                 # Get resources within the resource group
                 resources = list(resource_client.resources.list_by_resource_group(rg.name))
 
-                print(f"Found {len(resources)} resources in resource group {rg.name}")
+                logging.info(f"Found {len(resources)} resources in resource group {rg.name}")
 
                 # Initialize an empty list for this resource group
                 data['Objects'][subscription][rg.name] = []
 
                 # Add each resource to the diagram
                 for resource in resources:
-                    #print(resource.type)
+                    #logging.info(resource.type)
 
                     # Get the handler functions for this resource type
+                    logging.info(f"Processing resource {resource.name} of type {resource.type}")
                     handler_infos = resource_handlers.get(resource.type)
                     if handler_infos is not None:
                         for handler_info in handler_infos:
@@ -205,18 +213,19 @@ with tqdm(total=total_resources) as pbar:
                             # Call the handler function and get the data
                             resource_data = handler(resource, rg, client)
                             if 'Error' in resource_data:
-                                print(f"Error in {handler.__name__}: {resource_data['Error']}")
+                                logging.info(f"Error in {handler.__name__}: {resource_data['Error']}")
                             #else:
-                            #    print(f"Finished calling {handler.__name__} for resource {resource.name}")
+                            #    logging.info(f"Finished calling {handler.__name__} for resource {resource.name}")
 
                             data['Objects'][subscription][rg.name].append({
                                 'ResourceType': resource.type,
                                 'Details': resource_data
                             })
+                    #update progress bar
                     pbar.update()
 
         except Exception as e:
-            print(f"An error occurred: {e}")
+            logging.info(f"An error occurred: {e}")
 
 #record endtime for json properties
 end_time = time.time()
@@ -232,7 +241,7 @@ try:
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 except Exception as e:
-    print(f"Error creating directory: {e}")
+    logging.info(f"Error creating directory: {e}")
 
 # Assuming data is defined elsewhere
 # Output JSON
@@ -240,7 +249,7 @@ try:
     with open(f'{output_folder}/output.json', 'w') as f:
         json.dump(data, f, cls=CustomEncoder)
 except Exception as e:
-    print(f"Error writing to JSON file: {e}")
+    logging.info(f"Error writing to JSON file: {e}")
 
 # Output to excel is requested
 if args.output_xlsx:
@@ -249,11 +258,11 @@ if args.output_xlsx:
         with open(f'{output_folder}/output.json') as f:
             data = json.load(f)
     except Exception as e:
-        print(f"Error reading from JSON file: {e}")
+        logging.info(f"Error reading from JSON file: {e}")
     
     # Assuming output_to_excel is defined elsewhere
     # Write xlsx file
     try:
         output_to_excel(data, output_folder)
     except Exception as e:
-        print(f"Error writing to Excel file: {e}")
+        logging.info(f"Error writing to Excel file: {e}")

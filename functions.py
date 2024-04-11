@@ -2,6 +2,7 @@ import argparse
 import datetime
 import time
 import json
+import logging
 from azure_func import azure_imports
 from azure.identity import ClientSecretCredential
 
@@ -20,6 +21,7 @@ class CustomEncoder(json.JSONEncoder):
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Azure authentication parameters')
     parser.add_argument('--tenant_id', type=str, required=True, help='Tenant ID')
+    parser.add_argument('--log_level', type=str, required=False, default='INFO', help='Log Level')
     parser.add_argument('--client_id', type=str, required=True, help='Client ID')
     parser.add_argument('--client_secret', type=str, required=True, help='Client Secret')
     parser.add_argument('--subscription_id', type=str, required=False, help='Subscription ID')
@@ -27,6 +29,18 @@ def parse_arguments():
     parser.add_argument('--output_folder', type=str, required=False, help='Output Folder')
 
     return parser.parse_args()
+
+def set_up_logging(log_level):
+    numeric_level = getattr(logging, log_level.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError(f'Invalid log level: {log_level}')
+
+    logging.basicConfig(filename="CloudInfraViz.log", 
+                        format='%(asctime)s %(message)s', 
+                        filemode='w',
+                        level=numeric_level)
+
+    logger=logging.getLogger() 
 
 def initialize_data():
     start_time = time.time()

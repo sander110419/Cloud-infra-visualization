@@ -42,8 +42,10 @@ azure-mgmt-storagesync
 azure-mgmt-communication
 azure-mgmt-datamigration
 azure-mgmt-alertsmanagement
+tqdm
 pandas
 openpyxl
 azure.identity
 uuid
 lxml
+logging
