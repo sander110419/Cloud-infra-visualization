@@ -1170,7 +1170,7 @@ def handle_virtual_machines_extensions(resource, rg, compute_client):
         #print("Getting Virtual Machine Extensions...")
 
         # Create a dictionary where each key is the item name and the value is the item itself
-        protected_items_list = [extension.as_dict() for extension in vm_extensions]
+        protected_items_list = [extension.as_dict() for extension in vm_extensions.value]
 
         return protected_items_list
     

@@ -48,4 +48,3 @@ openpyxl
 azure.identity
 uuid
 lxml
-logging
