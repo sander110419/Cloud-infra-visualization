@@ -149,7 +149,10 @@ with tqdm(total=total_resources) as pbar:
                 'Microsoft.Compute/proximityPlacementGroups': [(handle_proximity_placement_group, 'compute')],
                 'Microsoft.Network/networkSecurityGroups': [(handle_network_security_group, 'network')],
                 'Microsoft.App/containerApps': [(handle_container_app, 'containerapp')],
-                'Microsoft.EventHub/namespaces': [(handle_event_hub, 'eventhub')],
+                'Microsoft.EventHub/namespaces': [
+                    (handle_event_hub_namespaces, 'eventhub'),
+                    (handle_event_hub_instance, 'eventhub')
+                ],
                 'Microsoft.Logic/workflows': [(handle_logic_app, 'logic')],
                 'Microsoft.ContainerRegistry/registries' : [(handle_container_registry, 'container_registry')],
                 #'Microsoft.ServiceBus/namespaces' : [(handle_service_bus_queues, 'servicebus')],

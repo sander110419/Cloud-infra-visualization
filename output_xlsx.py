@@ -17,12 +17,12 @@ def process_resource(resource):
     # Extract the 'type' field from the dataframe
     resource_type_df = df['type'].values[0] if 'type' in df.columns else ''
     
-    safe_resource_type_df = resource_type_df.replace('Microsoft.', '').replace('/', '_')
+    safe_resource_type_df = resource_type_df.replace('Microsoft.', '').replace('/', '_').lower()
     
     # Fall back to using ResourceType if type field is empty
     if not safe_resource_type_df:
         resource_type = resource['ResourceType']
-        safe_resource_type = resource_type.replace('Microsoft.', '').replace('/', '_')
+        safe_resource_type = resource_type.replace('Microsoft.', '').replace('/', '_').lower()
     else:
         safe_resource_type = safe_resource_type_df
     
