@@ -452,7 +452,7 @@ def handle_event_grid_subscriptions(resource, rg, event_grid_client):
 def handle_event_hub_instance(resource, rg, web_client):
     try:
        # Get the Event Hub
-        namespace = web_client.namespaces.get(rg, resource)
+        namespace = web_client.namespaces.get(rg.name, resource.name)
         event_hub_instance_list = []
         #print("Getting Event Hub namespaces...")
         
@@ -483,15 +483,15 @@ def handle_galleries_images_versions(resource, rg, compute_client):
     try:
         # Get the Gallery Image
         gallery_image = compute_client.gallery_images.list_by_gallery(rg, resource)
-        imageversion_dict = {}
+        imageversion_list = []
         for gallery in gallery_image:
             gallery_image_versions = compute_client.gallery_image_versions.list_by_gallery_image(rg, resource, gallery.name)
             # Convert each lock to a dictionary and add it to the main dictionary
             for imageversion in gallery_image_versions:
-                imageversion_dict[imageversion.name] = imageversion.as_dict()
+                imageversion_list.append(imageversion.as_dict())
 
 
-        return imageversion_dict
+        return imageversion_list
 
     except Exception as e:
         return {'Error': str(e)}
