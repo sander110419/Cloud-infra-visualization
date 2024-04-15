@@ -449,18 +449,20 @@ def handle_event_grid_subscriptions(resource, rg, event_grid_client):
     except Exception as e:
         return {'Error': str(e)}
     
-def handle_event_hub_instance(rg, resource, eventhub_client):
+def handle_event_hub_instance(resource, rg, web_client):
     try:
-        # Get the Event Hub
-        namespace = eventhub_client.namespaces.get(rg.name, resource.name)
+       # Get the Event Hub
+        namespace = web_client.namespaces.get(rg, resource)
+        event_hub_instance_list = []
+        #print("Getting Event Hub namespaces...")
         
         # Get all Event Hubs in the current namespace
-        event_hubs = eventhub_client.event_hubs.list_by_namespace(rg.name, namespace.name)
-        
-        # Create a list of dictionaries where each dictionary is an Event Hub instance
-        event_hubs_list = [event_hub.as_dict() for event_hub in event_hubs]
-        
-        return event_hubs_list
+        event_hubs = web_client.event_hubs.list_by_namespace(rg.name, namespace.name)
+        for event_hub in event_hubs:
+                # Convert each Event Hub to a dictionary and add it to the main dictionary
+                event_hub_instance_list.append(event_hub.as_dict())
+                
+        return event_hub_instance_list
 
     except Exception as e:
         return {'Error': str(e)}
@@ -471,7 +473,6 @@ def handle_event_hub_namespaces(resource, rg, eventhub_client):
         namespaces = eventhub_client.namespaces.get(rg.name, resource.name)
 
         namespaces_dict = namespaces.as_dict()
-        # Initialize an empty dictionary to store the Event Hub
 
         return namespaces_dict
 
@@ -848,29 +849,57 @@ def handle_search_service(resource, rg, search_client):
     except Exception as e:
         return {'Error': str(e)}
     
-# def handle_service_bus_queues(resource, rg, servicebus_client):
-#     try:
-#         # Get all Service Bus namespaces in the resource group
-#         namespaces = servicebus_client.namespaces.list_by_resource_group(rg)
+def handle_service_bus_namespaces(rg, resource, servicebus_client):
+    try:
+        # Get the Service bus instance
+        servicebus_namespace = servicebus_client.namespaces.get(resource.name, rg.name)
+        
+        # Get all Service bus in the current namespace
+        servicebus_namespaces_dict = servicebus_namespace.as_dict()
+        
+        return servicebus_namespaces_dict
 
-
-#         # Initialize an empty dictionary to store the Service Bus Queues
-#         service_bus_queues_dict = {}
-
-#         # Iterate over the namespaces
-#         for namespace in namespaces:
-#             # Get all Service Bus Queues in the current namespace
-#             queues = servicebus_client.queues.list_by_namespace(rg, namespace.name)
-#             # Iterate over the Queues
-#             for queue in queues:
-#                 # Convert each Queue to a dictionary and add it to the main dictionary
-#                 service_bus_queues_dict[queue.name] = queue.as_dict()
-
-#         return service_bus_queues_dict
-
-#     except Exception as e:
-#         return {'Error': str(e)}
+    except Exception as e:
+        return {'Error': str(e)}
     
+def handle_service_bus_queues(rg, resource, servicebus_client):
+    try:
+        # Get the Service bus instance
+        servicebus_namespace = servicebus_client.namespaces.get(resource.name, rg.name)
+        
+        # Get all Service bus in the current namespace
+        service_bus_queues_list = []
+        
+        queues = servicebus_client.queues.list_by_namespace(resource.name, servicebus_namespace.name)
+        # Iterate over the Queues
+        for queue in queues:
+            # Convert each Queue to a dictionary and add it to the main dictionary
+            service_bus_queues_list.append(queue.as_dict())
+        
+        return service_bus_queues_list
+
+    except Exception as e:
+        return {'Error': str(e)}
+
+def handle_service_bus_topics(rg, resource, servicebus_client):
+    try:
+        # Get the Service bus instance
+        servicebus_namespace = servicebus_client.namespaces.get(resource.name, rg.name)
+        
+        # Get all Service bus in the current namespace
+        service_bus_topics_list = []
+        
+        topics = servicebus_client.topics.list_by_namespace(resource.name, servicebus_namespace.name)
+        # Iterate over the Queues
+        for topic in topics:
+            # Convert each Queue to a dictionary and add it to the main list
+            service_bus_topics_list.append(topic.as_dict())
+        
+        return service_bus_topics_list
+
+    except Exception as e:
+        return [{'Error': str(e)}]
+
 def handle_service_fabric_cluster(resource, rg, sf_client):
     try:
         # Get the service_fabric

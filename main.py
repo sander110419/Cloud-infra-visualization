@@ -69,13 +69,6 @@ for subscription in subscriptions:
         # Initialize an empty dictionary for this subscription
         data['Objects'][subscription] = {}
 
-        # Initialize clients
-        clients = {name: cls(credential, subscription) for name, cls in client_classes.items()}
-
-        resource_handlers = {
-            # ... (same as before) ...
-        }
-
         # Step 3: Get all resource groups
         resource_groups = list(resource_client.resource_groups.list())
 
@@ -155,7 +148,11 @@ with tqdm(total=total_resources) as pbar:
                 ],
                 'Microsoft.Logic/workflows': [(handle_logic_app, 'logic')],
                 'Microsoft.ContainerRegistry/registries' : [(handle_container_registry, 'container_registry')],
-                #'Microsoft.ServiceBus/namespaces' : [(handle_service_bus_queues, 'servicebus')],
+                'Microsoft.ServiceBus/namespaces' : [
+                    (handle_service_bus_namespaces, 'servicebus'),
+                    (handle_service_bus_queues, 'servicebus'),
+                    (handle_service_bus_topics, 'servicebus')
+                ],
                 'Microsoft.Authorization/locks' : [(handle_management_locks, 'lock')],
                 'Microsoft.ContainerInstance/containerGroups' : [(handle_container_instance, 'container_instance')],
                 'Microsoft.Network/loadBalancers' : [(handle_load_balancer, 'network')],
