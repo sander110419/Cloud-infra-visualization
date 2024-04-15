@@ -40,8 +40,6 @@ def set_up_logging(log_level):
                         filemode='w',
                         level=numeric_level)
 
-    logger=logging.getLogger() 
-
 def initialize_data():
     start_time = time.time()
 

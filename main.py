@@ -123,7 +123,6 @@ with tqdm(total=total_resources) as pbar:
                 'Microsoft.BotService/botServices': [(handle_bot_service, 'bot_service')],
                 'Microsoft.Devices/IotHubs': [(handle_iot_hub, 'iot_hub')],
                 'Microsoft.CognitiveServices/accounts': [(handle_cognitive_service, 'cognitive')],
-                #'Microsoft.Network/privateDnsZones': [(handle_private_dns_zones, 'network')],
                 'Microsoft.Cdn/profiles': [(handle_cdn_profile, 'cdn')],
                 'Microsoft.ServiceFabric/clusters': [(handle_service_fabric_cluster, 'service_fabric')],
                 'Microsoft.DevTestLab/schedules': [(handle_devtest_lab, 'devtest')],
@@ -157,30 +156,36 @@ with tqdm(total=total_resources) as pbar:
                 'Microsoft.ContainerInstance/containerGroups' : [(handle_container_instance, 'container_instance')],
                 'Microsoft.Network/loadBalancers' : [(handle_load_balancer, 'network')],
                 'Microsoft.DataFactory/factories' : [(handle_data_factory, 'data_factory')],
-                'Microsoft.Compute/galleries' : [(handle_image_galleries, 'compute')],
+                'Microsoft.Compute/galleries' : [
+                    (handle_image_galleries, 'compute'),
+                    (handle_galleries_images, 'compute'),
+                    (handle_galleries_images_versions, 'compute')
+
+                ],
                 'Microsoft.Compute/images' : [(handle_vm_images, 'compute')],
                 'Microsoft.Compute/snapshots' : [(handle_vm_snapshot, 'compute')],
                 'Microsoft.Network/publicIPAddresses' : [(handle_public_ip, 'network')],
                 'Microsoft.Web/certificates' : [(handle_web_certificate, 'web')],
                 'Microsoft.Web/connections' : [(handle_web_connections, 'web')],
                 'Microsoft.StorageSync/storageSyncServices' : [(handle_storage_sync_services, 'storage_sync')],
-                #'Microsoft.Sql/managedInstances' : [(handle_sql_managed_instances, 'sql')],
+                'Microsoft.Sql/managedInstances' : [
+                    (handle_sql_managed_instances, 'sql'),
+                    (handle_sql_managed_instances_db, 'sql')
+                ],
                 'Microsoft.Network/privateLinkServices' : [(handle_private_link_services, 'network')],
                 'Microsoft.Logic/integrationAccounts' : [(handle_integration_accounts, 'logic')],
                 'Microsoft.Communication/CommunicationServices' : [(handle_communication_services, 'communication')],
                 'Microsoft.Sql/virtualCluster' : [(handle_virtual_cluster, 'sql')],
                 'Microsoft.Compute/restorePointCollections' : [(handle_restore_point_collections, 'compute')],
-                #'Microsoft.Sql/managedInstances/databases' : [(handle_sql_managed_instances_db, 'sql')],
-                'Microsoft.DataMigration/SqlMigrationServices' : [(handle_sql_migration_services, 'datamigration')],
                 'Microsoft.Network/serviceEndpointPolicies' : [(handle_service_endpoint_policy, 'network')],
-                #'Microsoft.Insights/components' : [(handle_insights_components, 'monitor')],
                 'Microsoft.Insights/metricalerts' : [(handle_insights_metric_alerts, 'monitor')],
                 'Microsoft.Insights/scheduledqueryrules' : [(handle_insights_scheduled_query_rules, 'monitor')],
-                #'Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies' : [(handle_application_gateway_waf_policies, 'network')],
-                # 'Microsoft.Cdn/profiles/afdendpoints' : [(handle_afd_endpoints, 'cdn')],
+                'Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies' : [(handle_application_gateway_waf_policies, 'network')],
+                'Microsoft.Cdn/profiles/afdendpoints' : [
+                    (handle_frontdoor_cdn, 'cdn'),
+                    (handle_afd_endpoints, 'cdn')
+                ],
                 'Microsoft.Network/routeTables' : [(handle_route_tables, 'network')],
-                'Microsoft.Compute/galleries/images' : [(handle_galleries_images, 'compute')],
-                'Microsoft.Compute/galleries/images/versions' : [(handle_galleries_images_versions, 'compute')],
                 'microsoft.alertsmanagement/smartDetectorAlertRules' : [(handle_smart_detector_alert_rules, 'alertsmanagement')],
                 'Microsoft.AlertsManagement/actionRules' : [(handle_action_rules, 'alertsmanagement')]
             }

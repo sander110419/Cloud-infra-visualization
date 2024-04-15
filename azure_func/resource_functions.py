@@ -23,28 +23,40 @@ def handle_action_rules(resource, rg, alertsmanagement_client):
         return action_rule_dict
 
     except Exception as e:
-        #print(f"Error: {e}")
         return {'Error': str(e)}
 
-# def handle_afd_endpoints(resource, rg, cdn_client):
-#     try:
-#         # Get the AFD Endpoint profiles in the rg
-#         afd_endpointprofile = cdn_client.ProfilesOperations.list_by_resource_group(rg.name)
-#         # Initialize an empty list for storing endpoint dictionaries
-#         afd_endpoint_dicts = []
-#         #get individual profiles
-#         for endpointprofile in afd_endpointprofile:
-#             afd_endpoint = cdn_client.afd_endpoints.list_by_profile(rg.name, endpointprofile.name)
-            
-#             # Loop through the iterator
-#             for endpoint in afd_endpoint:
-#                 # Convert each endpoint to a dictionary and add it to the list
-#                 afd_endpoint_dicts.append(endpoint.as_dict())
+def handle_frontdoor_cdn(resource, rg, cdn_client):
+    try:
+        # Get the AFD Endpoint profiles in the rg
+        afd_endpointprofile = cdn_client.profiles.get(rg.name, resource.name)
 
-#         return afd_endpoint_dicts
+        # Add the keys to the storage account dictionary
+        afd_endpointprofile_dict = afd_endpointprofile.as_dict()
 
-#     except Exception as e:
-#         return {'Error': str(e)}
+        return afd_endpointprofile_dict
+
+    except Exception as e:
+        return {'Error': str(e)}
+    
+def handle_afd_endpoints(resource, rg, cdn_client):
+    try:
+        # Get the AFD Endpoint profiles in the rg
+        afd_endpointprofile = cdn_client.profiles.get(rg.name, resource.name)
+
+        # Initialize an empty list for storing endpoint dictionaries
+        afd_endpoint_dicts = []
+        #get individual profiles
+        afd_endpoint = cdn_client.endpoints.list_by_profile(resource.name, afd_endpointprofile.name)
+        
+        # Loop through the iterator
+        for endpoint in afd_endpoint:
+            # Convert each endpoint to a dictionary and add it to the list
+            afd_endpoint_dicts.append(endpoint.as_dict())
+
+        return afd_endpoint_dicts
+
+    except Exception as e:
+        return {'Error': str(e)}
 
 def handle_aks_service(resource, rg, aks_client):
     try:
@@ -74,18 +86,18 @@ def handle_api_management(resource, rg, apim_client):
         return {'Error': str(e)}
     
 
-# def handle_application_gateway_waf_policies(resource, rg, network_client):
-#     try:
-#         # Get the Application Gateway WAF Policy
-#         waf_policy = network_client.application_gateway_waf_policies.get(rg.name, resource.name)
+def handle_application_gateway_waf_policies(resource, rg, network_client):
+    try:
+        # Get the Application Gateway WAF Policy
+        waf_policy = network_client.web_application_firewall_policies.get(rg.name, resource.name)
 
-#         # Add the keys to the WAF policy dictionary
-#         waf_policy_dict = waf_policy.as_dict()
+        # Add the keys to the WAF policy dictionary
+        waf_policy_dict = waf_policy.as_dict()
 
-#         return waf_policy_dict
+        return waf_policy_dict
 
-#     except Exception as e:
-#         return {'Error': str(e)}
+    except Exception as e:
+        return {'Error': str(e)}
     
 def handle_app_service_plan(resource, rg, web_client):
     try:
@@ -188,10 +200,10 @@ def handle_communication_services(resource, rg, communication_client):
     except Exception as e:
         return {'Error': str(e)}
     
-def handle_container_app(resource, rg, container_client):
+def handle_container_app(resource, rg, containerapp_client):
     try:
         # Get the Container App
-        container_app = container_client.container_groups.get(rg.name, resource.name)
+        container_app = containerapp_client.container_apps.get(rg, resource)
 
         # Add the keys to the Container App dictionary
         container_app_dict = container_app.as_dict()
@@ -410,19 +422,6 @@ def handle_disk(resource, rg, compute_client):
     except Exception as e:
         return {'Error': str(e)}
     
-# def handle_private_dns_zones(resource, rg, network_client):
-#     try:
-#         # Get the Private DNS Zone
-#         private_dns_zone = network_client.private_dns_zones.get(rg.name, resource.name)
-
-#         # Add the keys to the Private DNS Zone dictionary
-#         private_dns_zone_dict = private_dns_zone.as_dict()
-
-#         return private_dns_zone_dict
-
-#     except Exception as e:
-#         return {'Error': str(e)}
-    
 def handle_event_grids(resource, rg, event_grid_client):
     try:
         # Get the Event Grid Topic
@@ -482,10 +481,10 @@ def handle_event_hub_namespaces(resource, rg, eventhub_client):
 def handle_galleries_images_versions(resource, rg, compute_client):
     try:
         # Get the Gallery Image
-        gallery_image = compute_client.gallery_images.list_by_gallery(rg, resource)
+        gallery_image = compute_client.gallery_images.list_by_gallery(rg.name, resource.name)
         imageversion_list = []
         for gallery in gallery_image:
-            gallery_image_versions = compute_client.gallery_image_versions.list_by_gallery_image(rg, resource, gallery.name)
+            gallery_image_versions = compute_client.gallery_image_versions.list_by_gallery_image(rg.name, resource.name, gallery.name)
             # Convert each lock to a dictionary and add it to the main dictionary
             for imageversion in gallery_image_versions:
                 imageversion_list.append(imageversion.as_dict())
@@ -523,19 +522,6 @@ def handle_image_galleries(resource, rg, compute_client):
 
     except Exception as e:
         return {'Error': str(e)}
-    
-# def handle_insights_components(resource, rg, monitor_client):
-#     try:
-#         # Get the Insights Component
-#         insights_component = monitor_client.components.get(rg.name, resource.name)
-
-#         # Add the keys to the insights component dictionary
-#         insights_component_dict = insights_component.as_dict()
-
-#         return insights_component_dict
-
-#     except Exception as e:
-#         return {'Error': str(e)}
     
 def handle_insights_metric_alerts(resource, rg, monitor_client):
     try:
@@ -789,7 +775,6 @@ def handle_recovery_services_vault(resource, rg, recovery_services_client):
 
         # Add the keys to the recovery services vault dictionary
         recovery_services_vault_dict = recovery_services_vault.as_dict()
-        #print(recovery_services_vault_dict)
 
         return recovery_services_vault_dict
 
@@ -803,7 +788,6 @@ def handle_recovery_services_vault_items(resource, rg, recovery_backup_items_cli
         
         # Create a dictionary where each key is the item name and the value is the item itself
         protected_items_list = [item.as_dict() for item in protected_items]
-        #print(protected_items_dict)
 
         return protected_items_list
 
@@ -988,25 +972,21 @@ def handle_sql_managed_instances(resource, rg, sql_client):
     except Exception as e:
         return {'Error': str(e)}
     
-# def handle_sql_managed_instances_db(resource, rg, sql_client):
-#     try:
-#         # Split the resource id to get the server name
-#         resource_id_parts = resource.id.split('/')
-#         server_name = resource_id_parts[resource_id_parts.index('servers') + 1]
+def handle_sql_managed_instances_db(resource, rg, sql_client):
+    try:
+        # Get all SQL databases for the given server
+        sql_databases = sql_client.managed_databases.list_by_instance(rg.name, resource.name)
 
-#         # Get all SQL databases for the given server
-#         sql_databases = sql_client.databases.list_by_instance(rg.name, server_name)
+        # Initialize an empty dictionary
+        databases_dict = {}
 
-#         # Initialize an empty dictionary
-#         databases_dict = {}
+        # Iterate over each database and add it to the dictionary
+        for db in sql_databases:
+            databases_dict[db.name] = db.as_dict()
 
-#         # Iterate over each database and add it to the dictionary
-#         for db in sql_databases:
-#             databases_dict[db.name] = db.as_dict()
-
-#         return databases_dict
-#     except Exception as e:
-#         return {'Error': str(e)}
+        return databases_dict
+    except Exception as e:
+        return {'Error': str(e)}
     
 def handle_sql_server(resource, rg, sql_client):
     try:
