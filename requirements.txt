@@ -42,6 +42,7 @@ azure-mgmt-storagesync
 azure-mgmt-communication
 azure-mgmt-datamigration
 azure-mgmt-alertsmanagement
+azure-mgmt-appcontainers
 tqdm
 pandas
 openpyxl

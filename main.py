@@ -73,12 +73,14 @@ for subscription in subscriptions:
         resource_groups = list(resource_client.resource_groups.list())
 
         logging.info(f"Found {len(resource_groups)} resource groups")
+        print(f"Found {len(resource_groups)} resource groups")
 
         for rg in resource_groups:
             # Get resources within the resource group
             resources = list(resource_client.resources.list_by_resource_group(rg.name))
 
             logging.info(f"Found {len(resources)} resources in resource group {rg.name}")
+            print(f"Found {len(resources)} resources in resource group {rg.name}")
 
             total_resources += len(resources)
 
@@ -86,7 +88,7 @@ for subscription in subscriptions:
             data['Objects'][subscription][rg.name] = []
 
     except Exception as e:
-        logging.info(f"An error occurred: {e}")
+        logging.error(f"An error occurred: {e}")
 
 with tqdm(total=total_resources) as pbar:
 
@@ -218,9 +220,9 @@ with tqdm(total=total_resources) as pbar:
                             # Call the handler function and get the data
                             resource_data = handler(resource, rg, client)
                             if 'Error' in resource_data:
-                                logging.info(f"Error in {handler.__name__}: {resource_data['Error']}")
-                            #else:
-                            #    logging.info(f"Finished calling {handler.__name__} for resource {resource.name}")
+                                logging.warning(f"Error in {handler.__name__}: {resource_data['Error']}")
+                            else:
+                                logging.info(f"Finished calling {handler.__name__} for resource {resource.name}")
 
                             data['Objects'][subscription][rg.name].append({
                                 'ResourceType': resource.type,
@@ -246,15 +248,14 @@ try:
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 except Exception as e:
-    logging.info(f"Error creating directory: {e}")
+    logging.error(f"Error creating directory: {e}")
 
-# Assuming data is defined elsewhere
 # Output JSON
 try:
     with open(f'{output_folder}/output.json', 'w') as f:
         json.dump(data, f, cls=CustomEncoder)
 except Exception as e:
-    logging.info(f"Error writing to JSON file: {e}")
+    logging.error(f"Error writing to JSON file: {e}")
 
 # Output to excel is requested
 if args.output_xlsx:
@@ -263,11 +264,10 @@ if args.output_xlsx:
         with open(f'{output_folder}/output.json') as f:
             data = json.load(f)
     except Exception as e:
-        logging.info(f"Error reading from JSON file: {e}")
+        logging.error(f"Error reading from JSON file: {e}")
     
-    # Assuming output_to_excel is defined elsewhere
     # Write xlsx file
     try:
         output_to_excel(data, output_folder)
     except Exception as e:
-        logging.info(f"Error writing to Excel file: {e}")
+        logging.error(f"Error writing to Excel file: {e}")
