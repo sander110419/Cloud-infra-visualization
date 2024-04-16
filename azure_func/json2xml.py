@@ -1,8 +1,18 @@
+import sys
 import json
 import xml.etree.ElementTree as ET
 
+# Check if the correct number of arguments are provided
+if len(sys.argv) != 3:
+    print("Usage: python json2xml.py <input.json> <output.xml>")
+    sys.exit(1)
+
+# Get the input and output file paths from the command-line arguments
+json_file_path = sys.argv[1]
+xml_output_path = sys.argv[2]
+
 # Load the JSON data
-with open('./output/output.json') as f:
+with open(json_file_path) as f:
     data = json.load(f)
 
 # Create the root elements of the XML file
@@ -50,7 +60,7 @@ for subscription_id, resource_groups in data['Objects'].items():
     for resource_group, resources in resource_groups.items():
         # Create a node for the resource group
         rg_node = ET.SubElement(root, 'mxCell', {
-            'id': f"rg-{resource_group}",
+            'id': f"sub-{subscription_id}-rg-{resource_group}",
             'value': resource_group,
             'style': "rounded=0;whiteSpace=wrap;html=1;",
             'vertex': "1",
@@ -130,7 +140,10 @@ for subscription_id, resource_groups in data['Objects'].items():
 
                 # If the resource is a disk, create an edge to its VM
                 if resource['ResourceType'] == "Microsoft.Compute/disks":
-                    vm_id = detail['managed_by']
+                    if 'managed_by' in detail:
+                        vm_id = detail['managed_by']
+                    else:
+                        vm_id = None  # or some default value
                     if vm_id in all_resources:
                         edge = ET.SubElement(root, 'mxCell', {
                             'style': "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;",
@@ -191,6 +204,26 @@ for subscription_id, resource_groups in data['Objects'].items():
                                 points = ET.SubElement(edge_geometry, 'Array', {'as': "points"})
                                 ET.SubElement(points, 'mxPoint', {'x': "0", 'y': "0"})
 
+                # If the resource is a Private Endpoint, create an edge to its NIC
+                if resource['ResourceType'] == "Microsoft.Network/privateEndpoints":
+                    if 'network_interfaces' in detail:
+                        for nic in detail['network_interfaces']:
+                            nic_id = nic['id']
+                            if nic_id in all_resources:
+                                edge = ET.SubElement(root, 'mxCell', {
+                                    'style': "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;",
+                                    'edge': "1",
+                                    'parent': "1",
+                                    'source': f"resource-{detail['id']}",
+                                    'target': f"resource-{nic_id}"
+                                })
+                                edge_geometry = ET.SubElement(edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
+                                points = ET.SubElement(edge_geometry, 'Array', {'as': "points"})
+                                ET.SubElement(points, 'mxPoint', {'x': "0", 'y': "0"})
+                    if resource['ResourceType'] == "Microsoft.Compute/disks":
+                        if 'managed_by' in detail:
+                            vm_id = detail['managed_by']
+
 # Write the XML to a file
 tree = ET.ElementTree(mxfile)
-tree.write('./output/output.xml')
+tree.write(xml_output_path)
