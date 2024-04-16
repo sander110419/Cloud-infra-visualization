@@ -8,3 +8,5 @@ output.xlsx
 test.py
 CloudInfraViz.log
 output/~$output.xlsx
+output/output.xml
+output/Diagram.xml
