@@ -22,7 +22,30 @@ root = ET.SubElement(mxGraphModel, 'root')
 ET.SubElement(root, 'mxCell', {'id': "0"})
 ET.SubElement(root, 'mxCell', {'id': "1", 'parent': "0"})
 
-# Iterate over the objects in the JSON data
+# Create a dictionary to store all resources
+all_resources = {}
+
+# Create a set to store unique ids
+unique_ids = set()
+
+# Iterate over the objects in the JSON data to populate the all_resources dictionary
+for subscription_id, resource_groups in data['Objects'].items():
+    for resource_group, resources in resource_groups.items():
+        for resource in resources:
+            details = resource['Details']
+            if isinstance(details, dict):
+                details = [details]  # Make it a list to unify the handling
+
+            for detail in details:
+                # Check if 'id' exists in detail
+                if 'id' not in detail:
+                    print(f"Warning: Missing 'id' in detail: {detail}")
+                    continue  # Skip this detail
+
+                # Store the resource detail using its id as the key
+                all_resources[detail['id']] = detail
+
+# Iterate over the objects in the JSON data again to create the nodes and edges
 for subscription_id, resource_groups in data['Objects'].items():
     for resource_group, resources in resource_groups.items():
         # Create a node for the resource group
@@ -40,7 +63,20 @@ for subscription_id, resource_groups in data['Objects'].items():
             if isinstance(details, dict):
                 details = [details]  # Make it a list to unify the handling
 
-            for detail in details:
+            for i, detail in enumerate(details):
+                # Check if 'id' exists in detail
+                if 'id' not in detail:
+                    print(f"Warning: Missing 'id' in detail: {detail}")
+                    continue  # Skip this detail
+
+                # If the id is already in the set, skip this detail
+                if detail['id'] in unique_ids:
+                    print(f"Warning: Duplicate 'id' found: {detail['id']}")
+                    continue
+
+                # Add the id to the set
+                unique_ids.add(detail['id'])
+
                 # Create a node for each resource detail
                 resource_node = ET.SubElement(root, 'mxCell', {
                     'id': f"resource-{detail['id']}",
@@ -78,45 +114,82 @@ for subscription_id, resource_groups in data['Objects'].items():
                     ET.SubElement(server_points, 'mxPoint', {'x': "0", 'y': "0"})
 
                 # If the resource is a web app, create an edge to its app service plan
-                if detail['type'] == "Microsoft.Web/sites":
-                    server_id = '/'.join(detail['id'].split('/')[:-2])  # Extract the server id from the web app id
-                    server_edge = ET.SubElement(root, 'mxCell', {
-                        'style': "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;",
-                        'edge': "1",
-                        'parent': "1",
-                        'source': f"resource-{server_id}",
-                        'target': f"resource-{detail['id']}"
-                    })
-                    server_edge_geometry = ET.SubElement(server_edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
-                    server_points = ET.SubElement(server_edge_geometry, 'Array', {'as': "points"})
-                    ET.SubElement(server_points, 'mxPoint', {'x': "0", 'y': "0"})
-
-                # If the resource is a VM, create edges to its disk and NIC
-                if detail['type'] == "Microsoft.Compute/virtualMachines":
-                    for related_resource in detail['properties']['storageProfile']['dataDisks']:
-                        disk_id = related_resource['managedDisk']['id']
-                        disk_edge = ET.SubElement(root, 'mxCell', {
+                if resource['ResourceType'] == "Microsoft.Web/sites":
+                    server_farm_id = detail['server_farm_id']
+                    if server_farm_id in all_resources:
+                        edge = ET.SubElement(root, 'mxCell', {
                             'style': "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;",
                             'edge': "1",
                             'parent': "1",
                             'source': f"resource-{detail['id']}",
-                            'target': f"resource-{disk_id}"
+                            'target': f"resource-{server_farm_id}"
                         })
-                        disk_edge_geometry = ET.SubElement(disk_edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
-                        disk_points = ET.SubElement(disk_edge_geometry, 'Array', {'as': "points"})
-                        ET.SubElement(disk_points, 'mxPoint', {'x': "0", 'y': "0"})
+                        edge_geometry = ET.SubElement(edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
+                        points = ET.SubElement(edge_geometry, 'Array', {'as': "points"})
+                        ET.SubElement(points, 'mxPoint', {'x': "0", 'y': "0"})
 
-                    nic_id = detail['properties']['networkProfile']['networkInterfaces'][0]['id']
-                    nic_edge = ET.SubElement(root, 'mxCell', {
-                        'style': "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;",
-                        'edge': "1",
-                        'parent': "1",
-                        'source': f"resource-{detail['id']}",
-                        'target': f"resource-{nic_id}"
-                    })
-                    nic_edge_geometry = ET.SubElement(nic_edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
-                    nic_points = ET.SubElement(nic_edge_geometry, 'Array', {'as': "points"})
-                    ET.SubElement(nic_points, 'mxPoint', {'x': "0", 'y': "0"})
+                # If the resource is a disk, create an edge to its VM
+                if resource['ResourceType'] == "Microsoft.Compute/disks":
+                    vm_id = detail['managed_by']
+                    if vm_id in all_resources:
+                        edge = ET.SubElement(root, 'mxCell', {
+                            'style': "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;",
+                            'edge': "1",
+                            'parent': "1",
+                            'source': f"resource-{detail['id']}",
+                            'target': f"resource-{vm_id}"
+                        })
+                        edge_geometry = ET.SubElement(edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
+                        points = ET.SubElement(edge_geometry, 'Array', {'as': "points"})
+                        ET.SubElement(points, 'mxPoint', {'x': "0", 'y': "0"})
+
+                # If the resource is a VM, create an edge to its NIC
+                if resource['ResourceType'] == "Microsoft.Compute/virtualMachines":
+                    if 'network_profile' in detail and 'network_interfaces' in detail['network_profile']:
+                        nic_id = detail['network_profile']['network_interfaces'][0]['id']
+                        if nic_id in all_resources:
+                            edge = ET.SubElement(root, 'mxCell', {
+                                'style': "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;",
+                                'edge': "1",
+                                'parent': "1",
+                                'source': f"resource-{detail['id']}",
+                                'target': f"resource-{nic_id}"
+                            })
+                            edge_geometry = ET.SubElement(edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
+                            points = ET.SubElement(edge_geometry, 'Array', {'as': "points"})
+                            ET.SubElement(points, 'mxPoint', {'x': "0", 'y': "0"})
+
+                # If the resource is a VM, create an edge to its NIC and its extensions
+                if resource['ResourceType'] == "Microsoft.Compute/virtualMachines":
+                    if 'network_profile' in detail and 'network_interfaces' in detail['network_profile']:
+                        nic_id = detail['network_profile']['network_interfaces'][0]['id']
+                        if nic_id in all_resources:
+                            edge = ET.SubElement(root, 'mxCell', {
+                                'style': "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;",
+                                'edge': "1",
+                                'parent': "1",
+                                'source': f"resource-{detail['id']}",
+                                'target': f"resource-{nic_id}"
+                            })
+                            edge_geometry = ET.SubElement(edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
+                            points = ET.SubElement(edge_geometry, 'Array', {'as': "points"})
+                            ET.SubElement(points, 'mxPoint', {'x': "0", 'y': "0"})
+
+                    # Create an edge to each of its extensions
+                    if 'resources' in detail:
+                        for ext in detail['resources']:
+                            ext_id = ext['id']
+                            if ext_id in all_resources:
+                                edge = ET.SubElement(root, 'mxCell', {
+                                    'style': "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;",
+                                    'edge': "1",
+                                    'parent': "1",
+                                    'source': f"resource-{detail['id']}",
+                                    'target': f"resource-{ext_id}"
+                                })
+                                edge_geometry = ET.SubElement(edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
+                                points = ET.SubElement(edge_geometry, 'Array', {'as': "points"})
+                                ET.SubElement(points, 'mxPoint', {'x': "0", 'y': "0"})
 
 # Write the XML to a file
 tree = ET.ElementTree(mxfile)
