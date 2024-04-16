@@ -1,4 +1,3 @@
-import json
 import pandas as pd
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -30,15 +29,25 @@ def process_resource(resource):
     for column in fixed_columns_order:
         if column not in df.columns:
             df[column] = ''
+
+    # Extract subscription id from 'id' column and add it as a new column
+    if 'id' in df.columns:
+        df['subscription_id'] = df['id'].apply(lambda x: x.split('/')[2] if isinstance(x, str) and len(x.split('/')) > 2 else '')
+
+    # Make 'subscription_id' the first column
+    cols = list(df.columns)
+    cols.insert(0, cols.pop(cols.index('subscription_id')))
+    df = df.loc[:, cols]
+
     return safe_resource_type, df
 
 def update_resource_types(safe_resource_type, df, resource_types):
     if len(safe_resource_type) > 31:
         safe_resource_type = safe_resource_type[:30]
     if safe_resource_type not in resource_types:
-        other_columns = [col for col in df.columns.tolist() if col not in ['type', 'id', 'name'] and not col.startswith('tag.')]
+        other_columns = [col for col in df.columns.tolist() if col not in ['type', 'id', 'name', 'subscription_id'] and not col.startswith('tag.')]
         tag_columns = [col for col in df.columns.tolist() if col.startswith('tag.')]
-        sorted_columns = ['type', 'id', 'name'] + sorted(other_columns) + sorted(tag_columns)
+        sorted_columns = ['subscription_id', 'type', 'id', 'name'] + sorted(other_columns) + sorted(tag_columns)
         resource_types[safe_resource_type] = sorted_columns
     return safe_resource_type, resource_types
 

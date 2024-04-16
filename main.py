@@ -80,7 +80,6 @@ for subscription in subscriptions:
             resources = list(resource_client.resources.list_by_resource_group(rg.name))
 
             logging.info(f"Found {len(resources)} resources in resource group {rg.name}")
-            print(f"Found {len(resources)} resources in resource group {rg.name}")
 
             total_resources += len(resources)
 
