@@ -52,6 +52,13 @@ Replace "/path/to/your/output_folder" with your actual output path.
   
 **The image is also available on  [DockerHub](https://hub.docker.com/r/sander110419/cloud-infra-visualization)**
 
+To run directly from Docker hub:
+
+```
+docker run -v /path/to/your/output_folder:/app/output sander110419/cloud-infra-visualization --tenant_id "your_tenant_id" --client_id "your_client_id" --client_secret "your_client_secret" --subscription_id "your_subscription_id" --resource_group "your_resource_group" --output_xlsx --output_drawio
+```
+  
+Replace "/path/to/your/output_folder" with your actual output path.
 
 
 ## 📌 Roadmap
