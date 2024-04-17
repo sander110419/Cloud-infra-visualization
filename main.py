@@ -6,6 +6,7 @@ from output_xlsx import output_to_excel
 from functions import set_up_logging, parse_arguments, initialize_data, authenticate_to_azure, get_subscriptions, CustomEncoder
 from azure_func import azure_imports
 from tqdm import tqdm
+import subprocess
 from azure_func.resource_functions import *
 
 #parse arguments
@@ -70,7 +71,10 @@ for subscription in subscriptions:
         data['Objects'][subscription] = {}
 
         # Step 3: Get all resource groups
-        resource_groups = list(resource_client.resource_groups.list())
+        if args.resource_group:
+            resource_groups = [resource_client.resource_groups.get(args.resource_group)]
+        else:
+            resource_groups = list(resource_client.resource_groups.list())
 
         logging.info(f"Found {len(resource_groups)} resource groups")
         print(f"Found {len(resource_groups)} resource groups")
@@ -192,7 +196,10 @@ with tqdm(total=total_resources) as pbar:
             }
 
             # Step 3: Get all resource groups
-            resource_groups = list(resource_client.resource_groups.list())
+            if args.resource_group:
+                resource_groups = [resource_client.resource_groups.get(args.resource_group)]
+            else:
+                resource_groups = list(resource_client.resource_groups.list())
 
             logging.info(f"Found {len(resource_groups)} resource groups")
 
@@ -268,5 +275,12 @@ if args.output_xlsx:
     # Write xlsx file
     try:
         output_to_excel(data, output_folder)
+    except Exception as e:
+        logging.error(f"Error writing to Excel file: {e}")
+
+# Output to excel is requested
+if args.output_drawio:
+    try:
+        subprocess.call(['python', './azure_func/json2xml.py', f'{output_folder}/output.json', f'{output_folder}/output.drawio'])
     except Exception as e:
         logging.error(f"Error writing to Excel file: {e}")
