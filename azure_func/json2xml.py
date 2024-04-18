@@ -38,6 +38,9 @@ all_resources = {}
 # Create a set to store unique ids
 unique_ids = set()
 
+# Define the default edge (line) syle between resources
+edge_style = "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;"
+
 # Iterate over the objects in the JSON data to populate the all_resources dictionary
 for subscription_id, resource_groups in data['Objects'].items():
     for resource_group, resources in resource_groups.items():
@@ -99,7 +102,7 @@ for subscription_id, resource_groups in data['Objects'].items():
 
                 # Create an edge between the resource group and the resource
                 edge = ET.SubElement(root, 'mxCell', {
-                    'style': "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;",
+                    'style': edge_style,
                     'edge': "1",
                     'parent': "1",
                     'source': f"rg-{resource_group}",
@@ -113,7 +116,7 @@ for subscription_id, resource_groups in data['Objects'].items():
                 if detail['type'] == "Microsoft.Sql/servers/databases":
                     server_id = '/'.join(detail['id'].split('/')[:-2])  # Extract the server id from the database id
                     server_edge = ET.SubElement(root, 'mxCell', {
-                        'style': "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;",
+                        'style': edge_style,
                         'edge': "1",
                         'parent': "1",
                         'source': f"resource-{server_id}",
@@ -128,7 +131,7 @@ for subscription_id, resource_groups in data['Objects'].items():
                     server_farm_id = detail['server_farm_id']
                     if server_farm_id in all_resources:
                         edge = ET.SubElement(root, 'mxCell', {
-                            'style': "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;",
+                            'style': edge_style,
                             'edge': "1",
                             'parent': "1",
                             'source': f"resource-{detail['id']}",
@@ -146,7 +149,7 @@ for subscription_id, resource_groups in data['Objects'].items():
                         vm_id = None  # or some default value
                     if vm_id in all_resources:
                         edge = ET.SubElement(root, 'mxCell', {
-                            'style': "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;",
+                            'style': edge_style,
                             'edge': "1",
                             'parent': "1",
                             'source': f"resource-{detail['id']}",
@@ -162,7 +165,7 @@ for subscription_id, resource_groups in data['Objects'].items():
                         nic_id = detail['network_profile']['network_interfaces'][0]['id']
                         if nic_id in all_resources:
                             edge = ET.SubElement(root, 'mxCell', {
-                                'style': "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;",
+                                'style': edge_style,
                                 'edge': "1",
                                 'parent': "1",
                                 'source': f"resource-{detail['id']}",
@@ -178,7 +181,7 @@ for subscription_id, resource_groups in data['Objects'].items():
                         nic_id = detail['network_profile']['network_interfaces'][0]['id']
                         if nic_id in all_resources:
                             edge = ET.SubElement(root, 'mxCell', {
-                                'style': "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;",
+                                'style': edge_style,
                                 'edge': "1",
                                 'parent': "1",
                                 'source': f"resource-{detail['id']}",
@@ -194,7 +197,7 @@ for subscription_id, resource_groups in data['Objects'].items():
                             ext_id = ext['id']
                             if ext_id in all_resources:
                                 edge = ET.SubElement(root, 'mxCell', {
-                                    'style': "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;",
+                                    'style': edge_style,
                                     'edge': "1",
                                     'parent': "1",
                                     'source': f"resource-{detail['id']}",
@@ -211,7 +214,7 @@ for subscription_id, resource_groups in data['Objects'].items():
                             nic_id = nic['id']
                             if nic_id in all_resources:
                                 edge = ET.SubElement(root, 'mxCell', {
-                                    'style': "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;",
+                                    'style': edge_style,
                                     'edge': "1",
                                     'parent': "1",
                                     'source': f"resource-{detail['id']}",
