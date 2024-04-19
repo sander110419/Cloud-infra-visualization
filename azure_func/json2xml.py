@@ -105,7 +105,7 @@ for subscription_id, resource_groups in data['Objects'].items():
                     'style': edge_style,
                     'edge': "1",
                     'parent': "1",
-                    'source': f"rg-{resource_group}",
+                    'source': f"sub-{subscription_id}-rg-{resource_group}",
                     'target': f"resource-{detail['id']}"
                 })
                 edge_geometry = ET.SubElement(edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
