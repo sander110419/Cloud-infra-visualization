@@ -1,6 +1,7 @@
 import json
 import time
 import os
+import sys
 import logging
 from output_xlsx import output_to_excel
 from functions import set_up_logging, parse_arguments, initialize_data, authenticate_to_azure, get_subscriptions, CustomEncoder
@@ -163,10 +164,11 @@ for subscription in subscriptions:
             'Microsoft.AlertsManagement/actionRules' : [(handle_action_rules, 'alertsmanagement')]
         }
 
-        # Step 3: Get all resource groups
+        # Get specific resource group
         if args.resource_group:
             resource_groups = [resource_client.resource_groups.get(args.resource_group)]
         else:
+            # Get all resource groups
             resource_groups = list(resource_client.resource_groups.list())
 
         # Filter resource groups by tag if tag_key and tag_value are provided
@@ -223,7 +225,12 @@ for subscription in subscriptions:
                 average_time = sum(processing_times) / len(processing_times)
                 estimated_remaining = ((average_time * total_resources) / 3) * total_resourcegroups
                 estimated_remaining_td = timedelta(seconds=int(estimated_remaining))
-                print(f"\r{total_resources} resources left to process in RG {rg.name}, {total_resourcegroups} RG' left. Estimated time remaining: {str(estimated_remaining_td)}", end="")
+                if sys.stdout.isatty():
+                    # We are running in a real terminal
+                    print(f"\r{total_resources} resources left to process in RG {rg.name}, {total_resourcegroups} RG's left. Estimated time remaining: {str(estimated_remaining_td)}", end="")
+                else:
+                    # We are being piped or redirected
+                    print(f"{total_resources} resources left to process in RG {rg.name}, {total_resourcegroups} RG's left. Estimated time remaining: {str(estimated_remaining_td)}")
             total_resourcegroups -= 1
     except Exception as e:
         logging.info(f"An error occurred: {e}")
