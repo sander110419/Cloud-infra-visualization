@@ -175,6 +175,7 @@ for subscription in subscriptions:
         
         logging.info(f"Found {len(resource_groups)} resource groups")
         processing_times = []
+        total_resourcegroups = len(resource_groups)
         for rg in resource_groups:
             # Filter resources by tag if rtag_key and rtag_value are provided
             if args.rtag_key and args.rtag_value:
@@ -220,10 +221,10 @@ for subscription in subscriptions:
                         })
                 #update progress bar
                 average_time = sum(processing_times) / len(processing_times)
-                estimated_remaining = (average_time * total_resources) / 3
+                estimated_remaining = ((average_time * total_resources) / 3) * total_resourcegroups
                 estimated_remaining_td = timedelta(seconds=int(estimated_remaining))
-                print(f"\r{total_resources} left to process. Estimated time remaining: {str(estimated_remaining_td)}", end="")
-
+                print(f"\r{total_resources} resources left to process in RG {rg.name}, {total_resourcegroups} RG' left. Estimated time remaining: {str(estimated_remaining_td)}", end="")
+            total_resourcegroups -= 1
     except Exception as e:
         logging.info(f"An error occurred: {e}")
 
