@@ -4,7 +4,7 @@ import os
 import sys
 import logging
 from output_xlsx import output_to_excel
-from functions import set_up_logging, parse_arguments, initialize_data, authenticate_to_azure, get_subscriptions, CustomEncoder
+from azure_functions import set_up_logging, parse_arguments, initialize_data, authenticate_to_azure, get_subscriptions, CustomEncoder
 from azure_func import azure_imports
 from datetime import timedelta
 import subprocess
