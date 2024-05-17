@@ -6,10 +6,6 @@ import logging
 from azure_func import azure_imports
 from azure.identity import ClientSecretCredential
 
-def authenticate(tenant_id, client_id, client_secret):
-    credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
-    return credential
-
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
@@ -66,7 +62,7 @@ def initialize_data():
     return data, start_time
 
 def authenticate_to_azure(tenant_id, client_id, client_secret):
-    credential = authenticate(tenant_id, client_id, client_secret)
+    credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
     subscription_client = azure_imports.SubscriptionClient(credential)
 
     return credential, subscription_client

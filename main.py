@@ -166,7 +166,18 @@ for subscription in subscriptions:
 
         # Get specific resource group
         if args.resource_group:
-            resource_groups = [resource_client.resource_groups.get(args.resource_group)]
+            if args.subscription_id:
+                try:
+                    resource_groups = [resource_client.resource_groups.get(args.resource_group)]
+                except Exception as e:
+                    print(f"Resource group '{args.resource_group}' not found for subscription ID '{args.subscription_id}'")
+                    continue
+            else:
+                try:
+                    resource_groups = [resource_client.resource_groups.get(args.resource_group)]
+                except Exception as e:
+                    print(f"Resource group '{args.resource_group}' not found")
+                    continue
         else:
             # Get all resource groups
             resource_groups = list(resource_client.resource_groups.list())
