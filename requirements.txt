@@ -49,3 +49,4 @@ azure.identity
 uuid
 lxml
 PyQt5
+keyring
