@@ -1,13 +1,8 @@
-azure_resources.xml
 __pycache__
-.$azure_resources.xml.dtmp
 .vscode/settings.json
-run.ps1
-output.json
-output.xlsx
 test.py
 CloudInfraViz.log
 output/~$output.xlsx
-output/output.xml
-output/Diagram.xml
 output/output.drawio
+output/output.xlsx
+output/output.json

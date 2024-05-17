@@ -75,11 +75,8 @@ The project will be written in Python and in the future contain a web front-end 
 
 ### Providers
 
-The aim is to support all major cloud providers. The following are currently on the roadmap:
+Currently the aim is to fully support Azure, with any other providers in the future. 
 
-- **Azure**: Support for Azure infrastructure.
-- **AWS**: AWS infrastructure.
-- **Google**: Google Cloud Platform infrastructure.
 
 ### Visualizations
 
