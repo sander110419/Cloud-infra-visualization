@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QComboBox, QTextEdit, QWidget, QVBoxLayout, QPushButton, QDialog, QLineEdit, QFormLayout, QListWidgetItem, QDialogButtonBox, QListWidget, QCheckBox, QLabel, QRadioButton, QInputDialog, QMessageBox
+from PyQt5.QtWidgets import QApplication, QFileDialog, QScrollArea, QComboBox, QTextEdit, QWidget, QVBoxLayout, QPushButton, QDialog, QLineEdit, QFormLayout, QListWidgetItem, QDialogButtonBox, QListWidget, QCheckBox, QLabel, QRadioButton, QInputDialog, QMessageBox
 from PyQt5.QtCore import Qt, QProcess
 from functions import authenticate_to_azure, get_subscriptions
 import sys
@@ -25,6 +25,8 @@ try:
             self.current_identity = None
 
             self.initUI()
+            screen = QApplication.desktop().screenGeometry()
+            self.resize(800, screen.height())  # Set the default width to 800 and height to the maximum size of the screen
 
         def handle_error(self, error):
             self.outputTextEdit.append(f"An error occurred while running main.py: {error}")
@@ -47,6 +49,48 @@ try:
             layout.addWidget(self.listWidget)
             self.listWidget.itemChanged.connect(self.on_item_changed)
 
+            self.advancedButton = QPushButton('Advanced', self)
+            self.advancedButton.clicked.connect(self.toggle_advanced_options)
+            layout.addWidget(self.advancedButton)
+
+            self.scrollArea = QScrollArea()
+            self.scrollArea.setWidgetResizable(True)
+            self.scrollAreaWidgetContents = QWidget()
+            self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+
+            self.advancedLayout = QVBoxLayout(self.scrollAreaWidgetContents)
+
+            self.outputExcelCheckbox = QCheckBox("Output to Excel")
+            self.outputDrawIOCheckbox = QCheckBox("Output to DrawIO")
+
+            self.advancedLayout.addWidget(self.outputExcelCheckbox)
+            self.advancedLayout.addWidget(self.outputDrawIOCheckbox)
+
+            self.resourceGroupNameInput = QLineEdit()
+            self.resourceGroupTagKeyInput = QLineEdit()
+            self.resourceGroupTagValueInput = QLineEdit()
+            self.resourceTagKeyInput = QLineEdit()
+            self.resourceTagValueInput = QLineEdit()
+            self.outputFolderInput = QLineEdit()
+            self.browseButton = QPushButton('Browse')
+            self.browseButton.clicked.connect(lambda: self.browse_for_folder(self.outputFolderInput))
+
+            self.advancedLayout.addWidget(QLabel('Resource group name:'))
+            self.advancedLayout.addWidget(self.resourceGroupNameInput)
+            self.advancedLayout.addWidget(QLabel('Resource group tag key:'))
+            self.advancedLayout.addWidget(self.resourceGroupTagKeyInput)
+            self.advancedLayout.addWidget(QLabel('Resource group tag value:'))
+            self.advancedLayout.addWidget(self.resourceGroupTagValueInput)
+            self.advancedLayout.addWidget(QLabel('Resource tag key:'))
+            self.advancedLayout.addWidget(self.resourceTagKeyInput)
+            self.advancedLayout.addWidget(QLabel('Resource tag value:'))
+            self.advancedLayout.addWidget(self.resourceTagValueInput)
+            self.advancedLayout.addWidget(QLabel('Output folder:'))
+            self.advancedLayout.addWidget(self.outputFolderInput)
+            self.advancedLayout.addWidget(self.browseButton)
+
+            layout.addWidget(self.scrollArea)
+
             self.runButton = QPushButton('Run main.py', self)
             self.runButton.clicked.connect(self.run_main_py)
             layout.addWidget(self.runButton)
@@ -55,6 +99,9 @@ try:
             layout.addWidget(self.outputTextEdit)
 
             self.setLayout(layout)
+
+            # Initially hide the advanced options
+            self.scrollArea.hide()
 
         def load_identity(self, identity=None):
             if not identity:
@@ -104,6 +151,16 @@ try:
 
             self.label.setText(f"Selected Profile: {self.current_identity}")
 
+        def toggle_advanced_options(self):
+            if self.scrollArea.isHidden():
+                self.scrollArea.show()
+            else:
+                self.scrollArea.hide()
+
+        def browse_for_folder(self, outputFolderInput):
+            folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
+            outputFolderInput.setText(folder)
+
         def delete_identity(self, identity):
             if identity:
                 reply = QMessageBox.question(self, 'Delete Identity',
@@ -145,14 +202,34 @@ try:
                 self.process = QProcess()
                 self.process.readyReadStandardOutput.connect(self.read_output)
                 self.process.errorOccurred.connect(self.handle_error)
-                self.process.start(sys.executable, ['-u','main.py', 
-                                                    '--subscription_id', self.selected_subscription_id,
-                                                    '--tenant_id', self.tenant_id,
-                                                    '--client_id', self.client_id,
-                                                    '--client_secret', self.client_secret,
-                                                    '--resource_group', 'rg-p-app-10007729',
-                                                    '--output_xlsx'])
-                self.process.errorOccurred.connect(self.handle_error)
+
+                # Prepare the arguments for main.py
+                args = ['main.py', 
+                        '--subscription_id', self.selected_subscription_id,
+                        '--tenant_id', self.tenant_id,
+                        '--client_id', self.client_id,
+                        '--client_secret', self.client_secret]
+
+                # Add the advanced options to the arguments if they are not empty
+                if self.resourceGroupNameInput.text():
+                    args.extend(['--resource_group', self.resourceGroupNameInput.text()])
+                if self.resourceGroupTagKeyInput.text():
+                    args.extend(['--rgtag_key', self.resourceGroupTagKeyInput.text()])
+                if self.resourceGroupTagValueInput.text():
+                    args.extend(['--rgtag_value', self.resourceGroupTagValueInput.text()])
+                if self.resourceTagKeyInput.text():
+                    args.extend(['--rtag_key', self.resourceTagKeyInput.text()])
+                if self.resourceTagValueInput.text():
+                    args.extend(['--rtag_value', self.resourceTagValueInput.text()])
+                if self.outputFolderInput.text():
+                    args.extend(['--output_folder', self.outputFolderInput.text()])
+                if self.outputExcelCheckbox.isChecked():
+                    args.append('--output_xlsx')
+                if self.outputDrawIOCheckbox.isChecked():
+                    args.append('--output_drawio')
+
+                # Start the process with the prepared arguments
+                self.process.start(sys.executable, ['-u'] + args)
 
         def handle_error(self, error):
             self.outputTextEdit.append(f"An error occurred while running main.py: {error}")
