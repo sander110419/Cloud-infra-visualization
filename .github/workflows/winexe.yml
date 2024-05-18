@@ -24,7 +24,7 @@ jobs:
         pip install pyinstaller
 
     - name: Build EXE
-      run: pyinstaller --onefile frontend.py --name Cloudinfraviz
+      run: pyinstaller --onefile frontend.py --name Cloudinfraviz.exe
 
     - name: List files in dist directory
       run: ls -R dist
