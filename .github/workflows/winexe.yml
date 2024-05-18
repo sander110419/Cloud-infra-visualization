@@ -7,7 +7,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v2
@@ -26,8 +26,17 @@ jobs:
     - name: Build EXE
       run: pyinstaller --onefile frontend.py --name Cloudinfraviz.exe
 
+    - name: Download UPX
+      run: |
+        Invoke-WebRequest -Uri https://github.com/upx/upx/releases/download/v3.96/upx-3.96-win64.zip -OutFile upx.zip
+        Expand-Archive -Path upx.zip -DestinationPath .
+        Move-Item -Path .\upx-3.96-win64\upx.exe -Destination .
+
+    - name: Compress EXE
+      run: .\upx.exe --best .\dist\Cloudinfraviz.exe
+
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
         name: Cloudinfraviz.exe
-        path: dist/Cloudinfraviz.exe
+        path: ./dist/Cloudinfraviz.exe
