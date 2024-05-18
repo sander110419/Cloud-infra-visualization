@@ -24,10 +24,13 @@ jobs:
         pip install pyinstaller
 
     - name: Build EXE
-      run: pyinstaller --onefile frontend.py
+      run: pyinstaller --onefile frontend.py --name Cloudinfraviz
+
+    - name: List files in dist directory
+      run: ls -R dist
 
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
-        name: frontend.exe
-        path: dist/frontend.exe
+        name: Cloudinfraviz.exe
+        path: dist/Cloudinfraviz.exe
