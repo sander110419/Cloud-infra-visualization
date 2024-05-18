@@ -301,8 +301,10 @@ try:
                 self.process.readyReadStandardOutput.connect(self.read_output)
                 self.process.errorOccurred.connect(self.handle_error)
 
+                # Get the directory of the current script (or executable)
+                dir_path = os.path.dirname(os.path.abspath(__file__))
                 # Prepare the arguments for main.py
-                args = ['main.py', 
+                args = [os.path.join(dir_path, 'main.py'), 
                         '--subscription_id', self.selected_subscription_id,
                         '--tenant_id', self.tenant_id,
                         '--client_id', self.client_id,
