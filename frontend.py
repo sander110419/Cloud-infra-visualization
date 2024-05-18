@@ -96,7 +96,7 @@ try:
 
             layout.addWidget(self.scrollArea)
 
-            self.runButton = QPushButton('Run main.py', self)
+            self.runButton = QPushButton('Start document generation', self)
             self.runButton.clicked.connect(self.run_main_py)
             layout.addWidget(self.runButton)
 
