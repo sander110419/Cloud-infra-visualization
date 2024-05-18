@@ -340,7 +340,7 @@ try:
                         subprocess.call(('open', self.output_folder_input.text()))
                     else:
                         subprocess.call(('xdg-open', self.output_folder_input.text()))
-                        
+
         def extend_args_if_text(self, args, arg_name, input_field):
             if input_field.text():
                 args.extend([arg_name, input_field.text()])
