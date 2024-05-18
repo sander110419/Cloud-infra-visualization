@@ -253,7 +253,7 @@ duration = end_time - start_time
 data['Properties']['Duration'] = duration
 
 # Get output folder from arguments
-output_folder = args.output_folder if args.output_folder else './output'
+output_folder = args.output_folder if args.output_folder else os.path.join('.', 'output')
 
 # Create output directory if it does not exist
 try:
@@ -264,7 +264,7 @@ except Exception as e:
 
 # Output JSON
 try:
-    with open(f'{output_folder}/output.json', 'w') as f:
+    with open(os.path.join(output_folder, 'output.json'), 'w') as f:
         json.dump(data, f, cls=CustomEncoder)
 except Exception as e:
     logging.error(f"Error writing to JSON file: {e}")
@@ -273,7 +273,7 @@ except Exception as e:
 if args.output_xlsx:
     # Load your JSON data
     try:
-        with open(f'{output_folder}/output.json') as f:
+        with open(os.path.join(output_folder, 'output.json')) as f:
             data = json.load(f)
     except Exception as e:
         logging.error(f"Error reading from JSON file: {e}")
@@ -284,9 +284,9 @@ if args.output_xlsx:
     except Exception as e:
         logging.error(f"Error writing to Excel file: {e}")
 
-# Output to excel is requested
+# Output to drawio is requested
 if args.output_drawio:
     try:
-        subprocess.call(['python', './azure_func/json2xml.py', f'{output_folder}/output.json', f'{output_folder}/output.drawio'])
+        subprocess.call(['python', os.path.join('.', 'azure_func', 'json2xml.py'), os.path.join(output_folder, 'output.json'), os.path.join(output_folder, 'output.drawio')])
     except Exception as e:
-        logging.error(f"Error writing to Excel file: {e}")
+        logging.error(f"Error writing to DrawIO file: {e}")
