@@ -2,7 +2,7 @@ name: Build windows executable
 
 on:
   push:
-    branches: [ Feature/Frontend ]
+    branches: [ main ]
 
 jobs:
   build:
