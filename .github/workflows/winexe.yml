@@ -29,5 +29,5 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
-        name: CloudInfraViz.exe
-        path: dist/CloudInfraViz.exe
+        name: frontend.exe
+        path: dist/frontend.exe
