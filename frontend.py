@@ -222,9 +222,9 @@ try:
 
             if self.tenant_id and self.client_id and self.client_secret:
                 try:
-                    credential, subscription_client = authenticate_to_azure(self.tenant_id, self.client_id, self.client_secret)
+                    _, subscription_client = authenticate_to_azure(self.tenant_id, self.client_id, self.client_secret)
                     self.subscriptions = get_subscriptions(subscription_client, None)
-                except Exception as e:
+                except Exception as _:
                     QMessageBox.critical(self, "Invalid Credentials", "The provided credentials are invalid.")
                     return
             else:
@@ -367,12 +367,12 @@ try:
             form.addRow('Enter Client ID:', client_id_input)
             form.addRow('Enter Client Secret:', client_secret_input)
 
-            saveButton = QPushButton('Save', dialog)
-            dontSaveButton = QPushButton("Don't Save", dialog)
-            saveButton.clicked.connect(lambda: self.save_credentials(identity_name_input.text(), tenant_id_input.text(), client_id_input.text(), client_secret_input.text(), dialog))
-            dontSaveButton.clicked.connect(lambda: self.dont_save_credentials(identity_name_input.text(), tenant_id_input.text(), client_id_input.text(), client_secret_input.text(), dialog))
+            save_button = QPushButton('Save', dialog)
+            dontsave_button = QPushButton("Don't Save", dialog)
+            save_button.clicked.connect(lambda: self.save_credentials(identity_name_input.text(), tenant_id_input.text(), client_id_input.text(), client_secret_input.text(), dialog))
+            dontsave_button.clicked.connect(lambda: self.dont_save_credentials(identity_name_input.text(), tenant_id_input.text(), client_id_input.text(), client_secret_input.text(), dialog))
 
-            form.addRow(saveButton, dontSaveButton)
+            form.addRow(save_button, dontsave_button)
 
             dialog.exec_()
 
@@ -382,7 +382,7 @@ try:
             self.client_secret = client_secret
 
             try:
-                credential, subscription_client = authenticate_to_azure(self.tenant_id, self.client_id, self.client_secret)
+                _, subscription_client = authenticate_to_azure(self.tenant_id, self.client_id, self.client_secret)
                 self.subscriptions = get_subscriptions(subscription_client, None)
 
                 keyring.set_password("Azure", f"{identity_name}_tenant_id", self.tenant_id)
@@ -400,7 +400,7 @@ try:
                 self.current_identity = identity_name
                 self.load_identity(self.current_identity)
                 dialog.accept()
-            except Exception as e:
+            except Exception as _:
                 QMessageBox.critical(self, "Invalid Credentials", "The provided credentials are invalid.")
 
         def dont_save_credentials(self, identity_name, tenant_id, client_id, client_secret, dialog):
