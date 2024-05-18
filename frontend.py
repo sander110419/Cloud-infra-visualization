@@ -1,8 +1,10 @@
-from PyQt5.QtWidgets import QApplication, QFileDialog, QScrollArea, QComboBox, QTextEdit, QWidget, QVBoxLayout, QPushButton, QDialog, QLineEdit, QFormLayout, QListWidgetItem, QDialogButtonBox, QListWidget, QCheckBox, QLabel, QRadioButton, QInputDialog, QMessageBox
+from PyQt5.QtWidgets import QApplication, QFileDialog, QScrollArea, QComboBox, QTextEdit, QWidget, QVBoxLayout, QPushButton, QDialog, QLineEdit, QFormLayout, QListWidgetItem, QListWidget, QCheckBox, QLabel, QMessageBox
 from PyQt5.QtCore import Qt, QProcess
 from functions import authenticate_to_azure, get_subscriptions
 import sys
 import os
+import subprocess
+import platform
 import keyring
 
 try:
@@ -322,12 +324,26 @@ try:
                 # Start the process with the prepared arguments
                 self.process.start(sys.executable, ['-u'] + args)
 
+                # Wait for the process to finish
+                self.process.waitForFinished()
+
+                # Ask the user if they want to open the output folder
+                reply = QMessageBox.question(self, 'Open Output Folder',
+                                            'Do you want to open the output folder?',
+                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+                if reply == QMessageBox.Yes:
+                    # Open the output folder
+                    if platform.system() == "Windows":
+                        os.startfile(self.output_folder_input.text())
+                    elif platform.system() == "Darwin":
+                        subprocess.call(('open', self.output_folder_input.text()))
+                    else:
+                        subprocess.call(('xdg-open', self.output_folder_input.text()))
+
         def extend_args_if_text(self, args, arg_name, input_field):
             if input_field.text():
                 args.extend([arg_name, input_field.text()])
-
-        def handle_error(self, error):
-            self.outputTextEdit.append(f"An error occurred while running main.py: {error}")
 
         def read_output(self):
             output = bytes(self.process.readAllStandardOutput()).decode()
