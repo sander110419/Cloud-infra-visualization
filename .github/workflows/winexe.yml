@@ -23,8 +23,17 @@ jobs:
         if (Test-Path requirements.txt) { pip install -r requirements.txt }
         pip install pyinstaller
 
+    - name: Generate add-data options
+      run: |
+        $rootFiles = Get-ChildItem .\ -Filter *.py | ForEach-Object { "--add-data ""$($_.Name):.""" }
+        $azureFuncFiles = Get-ChildItem .\azure_func -Filter *.py | ForEach-Object { "--add-data ""azure_func/$($_.Name):azure_func""" }
+        $allFiles = $rootFiles + $azureFuncFiles
+        $global:ADD_DATA_OPTIONS = $allFiles -join " "
+      shell: pwsh
+
     - name: Build EXE
-      run: pyinstaller --onefile frontend.py --noconsole --name Cloudinfraviz.exe
+      run: pyinstaller --onefile frontend.py --noconsole --name Cloudinfraviz.exe $env:ADD_DATA_OPTIONS
+      shell: pwsh
 
     - name: Upload artifact
       uses: actions/upload-artifact@v2
