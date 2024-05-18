@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QApplication, QFileDialog, QScrollArea, QComboBox, Q
 from PyQt5.QtCore import Qt, QProcess
 from functions import authenticate_to_azure, get_subscriptions
 import sys
+import os
 import keyring
 
 try:
@@ -71,9 +72,9 @@ try:
             self.resourceGroupTagValueInput = QLineEdit()
             self.resourceTagKeyInput = QLineEdit()
             self.resourceTagValueInput = QLineEdit()
-            self.outputFolderInput = QLineEdit()
+            self.output_folder_input = QLineEdit()
             self.browseButton = QPushButton('Browse')
-            self.browseButton.clicked.connect(lambda: self.browse_for_folder(self.outputFolderInput))
+            self.browseButton.clicked.connect(lambda: self.browse_for_folder(self.output_folder_input))
 
             self.advancedLayout.addWidget(QLabel('Resource group name:'))
             self.advancedLayout.addWidget(self.resourceGroupNameInput)
@@ -86,7 +87,9 @@ try:
             self.advancedLayout.addWidget(QLabel('Resource tag value:'))
             self.advancedLayout.addWidget(self.resourceTagValueInput)
             self.advancedLayout.addWidget(QLabel('Output folder:'))
-            self.advancedLayout.addWidget(self.outputFolderInput)
+            self.advancedLayout.addWidget(self.output_folder_input)
+            #default output folder is /output in current directory
+            self.output_folder_input.setText(os.path.join(os.getcwd(), 'output'))
             self.advancedLayout.addWidget(self.browseButton)
 
             layout.addWidget(self.scrollArea)
@@ -103,6 +106,79 @@ try:
             # Initially hide the advanced options
             self.scrollArea.hide()
 
+            # Apply a stylesheet
+            self.setStyleSheet("""
+                QWidget {
+                    font: 12pt "Segoe UI";
+                    color: #FFFFFF;
+                    background-color: #2D2D30;
+                }
+                QPushButton {
+                    background-color: #3C3C3F;
+                    border: 1px solid #5E5E62;
+                    padding: 5px;
+                    min-width: 80px;
+                }
+                QPushButton:hover {
+                    background-color: #5E5E62;
+                }
+                QPushButton:pressed {
+                    background-color: #707070;
+                }
+                QLabel {
+                    font: bold 14pt "Segoe UI";
+                }
+                QTextEdit {
+                    background-color: #1E1E1E;
+                    border: none;
+                    color: #DCDCDC;
+                }
+                QCheckBox {
+                    spacing: 5px;
+                }
+                QCheckBox::indicator {
+                    width: 13px;
+                    height: 13px;
+                }
+                QLineEdit {
+                    border: 1px solid #DCDCDC;
+                }
+                QScrollBar:vertical {
+                    border: none;
+                    background: #2D2D30;
+                    width: 10px;
+                    margin: 15px 0 15px 0;
+                    border-radius: 0px;
+                }
+                QScrollBar::handle:vertical {   
+                    background-color: #888;
+                    min-height: 30px;
+                    border-radius: 5px;
+                }
+                QScrollBar::handle:vertical:hover{ 
+                    background-color: #555;
+                }
+                QScrollBar::add-line:vertical {
+                    height: 15px;
+                    subcontrol-position: bottom;
+                    subcontrol-origin: margin;
+                }
+                QScrollBar::sub-line:vertical {
+                    height: 15px;
+                    subcontrol-position: top;
+                    subcontrol-origin: margin;
+                }
+                QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {
+                    border: none;
+                    width: 3px;
+                    height: 3px;
+                    background: transparent;
+                }
+                QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                    background: none;
+                }
+            """)
+
         def load_identity(self, identity=None):
             if not identity:
                 identities = keyring.get_password("Azure", "identities")
@@ -113,34 +189,44 @@ try:
                     dialog = QDialog()
                     layout = QVBoxLayout()
 
-                    comboBox = QComboBox()
-                    comboBox.addItems(identities)
-                    layout.addWidget(comboBox)
+                    self.comboBox = QComboBox()  # Change here
+                    self.comboBox.addItems(identities)  # And here
+                    layout.addWidget(self.comboBox)
 
-                    deleteButton = QPushButton('Delete', self)
-                    deleteButton.clicked.connect(lambda: self.delete_identity(comboBox.currentText()))
-                    layout.addWidget(deleteButton)
+                    delete_button = QPushButton('Delete', self)
+                    delete_button.clicked.connect(lambda: self.delete_identity(self.comboBox.currentText()))  # And here
+                    layout.addWidget(delete_button)
 
-                    okButton = QPushButton('OK', self)
-                    okButton.clicked.connect(dialog.accept)
-                    layout.addWidget(okButton)
+                    ok_button = QPushButton('OK', self)
+                    ok_button.clicked.connect(dialog.accept)
+                    layout.addWidget(ok_button)
 
                     dialog.setLayout(layout)
                     result = dialog.exec_()
 
                     if result == QDialog.Accepted:
-                        identity = comboBox.currentText()
+                        identity = self.comboBox.currentText()  # And here
                         self.current_identity = identity
-                else:
-                    QMessageBox.information(self, "No Identities Available", "There are no saved identities available.")
-                    return
+                    else:
+                        QMessageBox.information(self, "No Identities Available", "There are no saved identities available.")
+                        return
 
             self.tenant_id = keyring.get_password("Azure", f"{self.current_identity}_tenant_id")
             self.client_id = keyring.get_password("Azure", f"{self.current_identity}_client_id")
             self.client_secret = keyring.get_password("Azure", f"{self.current_identity}_client_secret")
+            self.tenant_id = keyring.get_password("Azure", f"{self.current_identity}_tenant_id")
+            self.client_id = keyring.get_password("Azure", f"{self.current_identity}_client_id")
+            self.client_secret = keyring.get_password("Azure", f"{self.current_identity}_client_secret")
 
-            credential, subscription_client = authenticate_to_azure(self.tenant_id, self.client_id, self.client_secret)
-            self.subscriptions = get_subscriptions(subscription_client, None)
+            if self.tenant_id and self.client_id and self.client_secret:
+                try:
+                    credential, subscription_client = authenticate_to_azure(self.tenant_id, self.client_id, self.client_secret)
+                    self.subscriptions = get_subscriptions(subscription_client, None)
+                except Exception as e:
+                    QMessageBox.critical(self, "Invalid Credentials", "The provided credentials are invalid.")
+                    return
+            else:
+                QMessageBox.information(self, "No Identities Available", "There are no saved identities available.")
 
             self.listWidget.clear()
             for id, name in self.subscriptions:
@@ -157,9 +243,15 @@ try:
             else:
                 self.scrollArea.hide()
 
-        def browse_for_folder(self, outputFolderInput):
+        def browse_for_folder(self, output_folder_input):
             folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
-            outputFolderInput.setText(folder)
+            if folder:  # If a folder is selected
+                if os.path.exists(folder):  # Check if the directory exists
+                    output_folder_input.setText(folder)
+                else:
+                    QMessageBox.critical(self, "Invalid Directory", "The selected directory does not exist.")
+            else:
+                print("No folder selected.")
 
         def delete_identity(self, identity):
             if identity:
@@ -188,6 +280,10 @@ try:
                     self.label.setText("Please choose an identity or create a new one")
                     self.listWidget.clear()
 
+                    # Refresh the list of identities in the combo box
+                    self.comboBox.clear()  # Change here
+                    self.comboBox.addItems(identities)  # And here
+                
         def on_item_changed(self, item):
             if item.checkState() == Qt.Checked:
                 self.selected_subscription_id = item.text().split(' ')[-1].strip('()')
@@ -211,18 +307,13 @@ try:
                         '--client_secret', self.client_secret]
 
                 # Add the advanced options to the arguments if they are not empty
-                if self.resourceGroupNameInput.text():
-                    args.extend(['--resource_group', self.resourceGroupNameInput.text()])
-                if self.resourceGroupTagKeyInput.text():
-                    args.extend(['--rgtag_key', self.resourceGroupTagKeyInput.text()])
-                if self.resourceGroupTagValueInput.text():
-                    args.extend(['--rgtag_value', self.resourceGroupTagValueInput.text()])
-                if self.resourceTagKeyInput.text():
-                    args.extend(['--rtag_key', self.resourceTagKeyInput.text()])
-                if self.resourceTagValueInput.text():
-                    args.extend(['--rtag_value', self.resourceTagValueInput.text()])
-                if self.outputFolderInput.text():
-                    args.extend(['--output_folder', self.outputFolderInput.text()])
+                self.extend_args_if_text(args, '--resource_group', self.resourceGroupNameInput)
+                self.extend_args_if_text(args, '--rgtag_key', self.resourceGroupTagKeyInput)
+                self.extend_args_if_text(args, '--rgtag_value', self.resourceGroupTagValueInput)
+                self.extend_args_if_text(args, '--rtag_key', self.resourceTagKeyInput)
+                self.extend_args_if_text(args, '--rtag_value', self.resourceTagValueInput)
+                self.extend_args_if_text(args, '--output_folder', self.output_folder_input)
+
                 if self.outputExcelCheckbox.isChecked():
                     args.append('--output_xlsx')
                 if self.outputDrawIOCheckbox.isChecked():
@@ -230,6 +321,10 @@ try:
 
                 # Start the process with the prepared arguments
                 self.process.start(sys.executable, ['-u'] + args)
+
+        def extend_args_if_text(self, args, arg_name, input_field):
+            if input_field.text():
+                args.extend([arg_name, input_field.text()])
 
         def handle_error(self, error):
             self.outputTextEdit.append(f"An error occurred while running main.py: {error}")
@@ -270,21 +365,27 @@ try:
             self.client_id = client_id
             self.client_secret = client_secret
 
-            keyring.set_password("Azure", f"{identity_name}_tenant_id", self.tenant_id)
-            keyring.set_password("Azure", f"{identity_name}_client_id", self.client_id)
-            keyring.set_password("Azure", f"{identity_name}_client_secret", self.client_secret)
+            try:
+                credential, subscription_client = authenticate_to_azure(self.tenant_id, self.client_id, self.client_secret)
+                self.subscriptions = get_subscriptions(subscription_client, None)
 
-            identities = keyring.get_password("Azure", "identities")
-            if identities:
-                identities = identities.split(',')
-                identities.append(identity_name)
-            else:
-                identities = [identity_name]
-            keyring.set_password("Azure", "identities", ','.join(identities))
+                keyring.set_password("Azure", f"{identity_name}_tenant_id", self.tenant_id)
+                keyring.set_password("Azure", f"{identity_name}_client_id", self.client_id)
+                keyring.set_password("Azure", f"{identity_name}_client_secret", self.client_secret)
 
-            self.current_identity = identity_name
-            self.load_identity(self.current_identity)
-            dialog.accept()
+                identities = keyring.get_password("Azure", "identities")
+                if identities:
+                    identities = identities.split(',')
+                    identities.append(identity_name)
+                else:
+                    identities = [identity_name]
+                keyring.set_password("Azure", "identities", ','.join(identities))
+
+                self.current_identity = identity_name
+                self.load_identity(self.current_identity)
+                dialog.accept()
+            except Exception as e:
+                QMessageBox.critical(self, "Invalid Credentials", "The provided credentials are invalid.")
 
         def dont_save_credentials(self, identity_name, tenant_id, client_id, client_secret, dialog):
             self.tenant_id = tenant_id
