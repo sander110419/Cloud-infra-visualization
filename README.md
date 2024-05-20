@@ -8,7 +8,6 @@ Cloud-Infra-Visualization is an open-source tool designed to programmatically cr
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=sander110419_Cloud-infra-visualization&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=sander110419_Cloud-infra-visualization)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=sander110419_Cloud-infra-visualization&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=sander110419_Cloud-infra-visualization)  
 
-
 ## ✅ Currently Implemented Features
 
 ### Trello Board:
@@ -20,7 +19,7 @@ We currently support about 60 Azure resourcetypes.
 ## 🚀 How to Run
 
 You can run the minimum script as follows:  
-```
+```python
 main.py --tenant_id TENANT_ID --client_id CLIENT_ID --client_secret CLIENT_SECRET --output_xlsx --output_folder PATH_TO_OUTPUT_FOLDER
 ``` 
 If you do not add a subscription ID, the script will iterate over all available subscriptions.  
@@ -31,7 +30,7 @@ The `--output_folder` flag is optional, if this is omitted, it will write to an 
 The `--output_drawio` flag is optional, when added this will output a drawio file with your visualization.  
 
 The full version with all features enabled would be:  
-```
+```python
 main.py --tenant_id TENANT_ID --client_id CLIENT_ID --client_secret CLIENT_SECRET --subscription_id SUBSCRIPTION_ID --resource_group RESOURCE_GROUP --output_folder PATH_TO_OUTPUT_FOLDER --output_xlsx --output_drawio
 ``` 
 
@@ -57,12 +56,37 @@ Replace "/path/to/your/output_folder" with your actual output path.
 
 To run directly from Docker hub:
 
-```
+```bash
 docker run -v /path/to/your/output_folder:/app/output sander110419/cloud-infra-visualization --tenant_id "your_tenant_id" --client_id "your_client_id" --client_secret "your_client_secret" --subscription_id "your_subscription_id" --resource_group "your_resource_group" --output_xlsx --output_drawio
 ```
   
 Replace "/path/to/your/output_folder" with your actual output path.
 
+## 🖥️ GUI Usage
+
+The project also includes a Graphical User Interface (GUI) for ease of use. The GUI is built using PyQt5 and provides an interactive way to input your Azure credentials, select subscriptions, and choose output options.
+
+### How to Run the GUI
+
+You can run the GUI by executing the following command:
+
+```python
+python frontend.py
+```
+
+### GUI Features
+
+The GUI provides the following features:
+
+1. **Load Identity**: This button allows you to load a previously saved identity. An identity consists of a Tenant ID, Client ID, and Client Secret.
+
+2. **New Identity**: This button opens a dialog where you can enter a new identity. You will need to provide a Tenant ID, Client ID, and Client Secret. The identity gets safely stored in the keyring (Linux Keyring or Windows Credential storage)
+
+3. **Subscription List**: This list shows all the subscriptions available for the loaded identity. You can select one or more subscriptions to be included in the visualization.
+
+4. **Advanced Options**: This section allows you to specify additional options such as output format (Excel or DrawIO), resource group name, resource group tag key/value, resource tag key/value, and output folder.
+
+5. **Start Document Generation**: This button starts the document generation process. The output will be displayed in the text area below the button, after which you can choose to open the output folder.
 
 ## 📌 Roadmap
 
@@ -76,7 +100,6 @@ The project will be written in Python and in the future contain a web front-end 
 ### Providers
 
 Currently the aim is to fully support Azure, with any other providers in the future. 
-
 
 ### Visualizations
 
