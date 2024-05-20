@@ -287,7 +287,7 @@ def generate_output():
 
     # Get output folder from arguments
     output_folder = args.output_folder if args.output_folder else os.path.join('.', 'output')
-
+    output_json_file = 'output.json'
     # Create output directory if it does not exist
     try:
         if not os.path.exists(output_folder):
@@ -297,7 +297,7 @@ def generate_output():
 
     # Output JSON
     try:
-        with open(os.path.join(output_folder, 'output.json'), 'w') as f:
+        with open(os.path.join(output_folder, output_json_file), 'w') as f:
             json.dump(data, f, cls=CustomEncoder)
     except Exception as e:
         logging.error(f"Error writing to JSON file: {e}")
@@ -306,7 +306,7 @@ def generate_output():
     if args.output_xlsx:
         # Load your JSON data
         try:
-            with open(os.path.join(output_folder, 'output.json')) as f:
+            with open(os.path.join(output_folder, output_json_file)) as f:
                 data = json.load(f)
         except Exception as e:
             logging.error(f"Error reading from JSON file: {e}")
@@ -320,7 +320,7 @@ def generate_output():
     # Output to drawio is requested
     if args.output_drawio:
         try:
-            subprocess.call(['python', os.path.join('.', 'azure_func', 'json2xml.py'), os.path.join(output_folder, 'output.json'), os.path.join(output_folder, 'output.drawio')])
+            subprocess.call(['python', os.path.join('.', 'azure_func', 'json2xml.py'), os.path.join(output_folder, output_json_file), os.path.join(output_folder, 'output.drawio')])
         except Exception as e:
             logging.error(f"Error writing to DrawIO file: {e}")
 
