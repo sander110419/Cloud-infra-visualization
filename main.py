@@ -204,9 +204,9 @@ def process_subscription(subscription, data, args, client_classes):
 def process_resource_group(rg, resource_client, data, subscription, clients, resource_handlers, args, processing_times, total_resourcegroups):
     # Filter resources by tag if rtag_key and rtag_value are provided
     if args.rtag_key and args.rtag_value:
-        tagfilter = f"tagName eq '{args.rtag_key}' and tagValue eq '{args.rtag_value}'"
+        filter = f"tagName eq '{args.rtag_key}' and tagValue eq '{args.rtag_value}'"
         # Get all resources with filter
-        resources = list(resource_client.resources.list_by_resource_group(rg.name, tagfilter))
+        resources = list(resource_client.resources.list_by_resource_group(rg.name, filter))
 
     else:
         # Get all resources within the resource group
@@ -262,8 +262,7 @@ def update_progress_bar(total_resources, rg, total_resourcegroups, processing_ti
         print(f"{total_resources} resources left to process in RG {rg.name}, {total_resourcegroups} RG's left. Estimated time remaining: {str(estimated_remaining_td)}")
     total_resourcegroups -= 1
 
-def main():
-    outputfile = "output.json"
+def generate_output():
     #parse arguments
     args = parse_arguments()
     #set up logging
@@ -271,7 +270,7 @@ def main():
     #initialise data
     data, start_time = initialize_data()
     #authenticate to Azure
-    _, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, args.client_secret)
+    credential, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, args.client_secret)
     #Get all subscriptions from erguments
     subscriptions = get_subscriptions(subscription_client, args.subscription_id)
 
@@ -298,7 +297,7 @@ def main():
 
     # Output JSON
     try:
-        with open(os.path.join(output_folder, outputfile), 'w') as f:
+        with open(os.path.join(output_folder, 'output.json'), 'w') as f:
             json.dump(data, f, cls=CustomEncoder)
     except Exception as e:
         logging.error(f"Error writing to JSON file: {e}")
@@ -307,7 +306,7 @@ def main():
     if args.output_xlsx:
         # Load your JSON data
         try:
-            with open(os.path.join(output_folder, outputfile)) as f:
+            with open(os.path.join(output_folder, 'output.json')) as f:
                 data = json.load(f)
         except Exception as e:
             logging.error(f"Error reading from JSON file: {e}")
@@ -321,9 +320,9 @@ def main():
     # Output to drawio is requested
     if args.output_drawio:
         try:
-            subprocess.call(['python', os.path.join('.', 'azure_func', 'json2xml.py'), os.path.join(output_folder, outputfile), os.path.join(output_folder, 'output.drawio')])
+            subprocess.call(['python', os.path.join('.', 'azure_func', 'json2xml.py'), os.path.join(output_folder, 'output.json'), os.path.join(output_folder, 'output.drawio')])
         except Exception as e:
             logging.error(f"Error writing to DrawIO file: {e}")
 
 if __name__ == "__main__":
-    main()
+    generate_output()
