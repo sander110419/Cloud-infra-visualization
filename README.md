@@ -14,7 +14,15 @@ Cloud-Infra-Visualization is an open-source tool designed to programmatically cr
 You can view our progress and upcoming features on our [Trello board](https://trello.com/b/wuSdQR4P/cloud-visualization-project).
 
 ### Azure:
-We currently support about 60 Azure resourcetypes.
+We currently support MOST Azure resourcetypes.
+
+### What does it do (as of now):
+- Get all or selected subscriptions
+- Iterate over all these and gets all or selected resource groups
+- Iterate over all or selected resource groups and gets all resources.
+- Output an excel file with all technical configuration details of all resources
+- Output a draw.io diagram which connects all resources to resource groups, DBs to servers, disks to VMs etc.
+- Output a json file containing all the technical data to process in other tools.
 
 ## 🚀 How to Run
 
