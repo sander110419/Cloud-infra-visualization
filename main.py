@@ -204,9 +204,9 @@ def process_subscription(subscription, data, args, client_classes):
 def process_resource_group(rg, resource_client, data, subscription, clients, resource_handlers, args, processing_times, total_resourcegroups):
     # Filter resources by tag if rtag_key and rtag_value are provided
     if args.rtag_key and args.rtag_value:
-        filter = f"tagName eq '{args.rtag_key}' and tagValue eq '{args.rtag_value}'"
+        tag_filter = f"tagName eq '{args.rtag_key}' and tagValue eq '{args.rtag_value}'"
         # Get all resources with filter
-        resources = list(resource_client.resources.list_by_resource_group(rg.name, filter))
+        resources = list(resource_client.resources.list_by_resource_group(rg.name, tag_filter))
 
     else:
         # Get all resources within the resource group
@@ -270,7 +270,7 @@ def generate_output():
     #initialise data
     data, start_time = initialize_data()
     #authenticate to Azure
-    credential, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, args.client_secret)
+    _, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, args.client_secret)
     #Get all subscriptions from erguments
     subscriptions = get_subscriptions(subscription_client, args.subscription_id)
 
