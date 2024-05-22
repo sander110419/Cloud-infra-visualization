@@ -17,7 +17,7 @@ set_up_logging(args.log_level)
 #initialise data
 data, start_time = initialize_data()
 #authenticate to Azure
-credential, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, args.client_secret)
+credential, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, args.client_secret, args.certificate_path)
 #Get all subscriptions from erguments
 subscriptions = get_subscriptions(subscription_client, args.subscription_id)
 
@@ -270,7 +270,11 @@ def generate_output():
     #initialise data
     data, start_time = initialize_data()
     #authenticate to Azure
-    _, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, args.client_secret)
+    # If certificate_path is provided, pass None as client_secret
+    if args.certificate_path:
+        _, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, None, args.certificate_path)
+    else:
+        _, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, args.client_secret)
     #Get all subscriptions from erguments
     subscriptions = get_subscriptions(subscription_client, args.subscription_id)
 

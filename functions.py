@@ -4,7 +4,7 @@ import time
 import json
 import logging
 from azure_func import azure_imports
-from azure.identity import ClientSecretCredential
+from azure.identity import ClientSecretCredential, CertificateCredential
 
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -19,7 +19,8 @@ def parse_arguments():
     parser.add_argument('--log_level', type=str, required=False, default='INFO', help='Log Level')
     parser.add_argument('--tenant_id', type=str, required=True, help='Tenant ID')
     parser.add_argument('--client_id', type=str, required=True, help='Client ID')
-    parser.add_argument('--client_secret', type=str, required=True, help='Client Secret')
+    parser.add_argument('--client_secret', type=str, required=False, help='Client Secret')
+    parser.add_argument('--certificate_path', type=str, required=False, help='Path to the certificate file')
     
     #filter args
     parser.add_argument('--subscription_id', type=str, required=False, help='Subscription ID')
@@ -61,8 +62,20 @@ def initialize_data():
 
     return data, start_time
 
-def authenticate_to_azure(tenant_id, client_id, client_secret):
-    credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
+def authenticate_to_azure(tenant_id, client_id, client_secret, certificate_path=None):
+    if certificate_path:
+        try:
+            with open(certificate_path, "rb") as file:
+                pem_data = file.read()
+            logging.info(f"Successfully read the certificate file from: {certificate_path}")
+        except Exception as e:
+            logging.error(f"Error reading the certificate file from: {certificate_path}. Error: {str(e)}")
+            raise e
+
+        credential = CertificateCredential(tenant_id=tenant_id, client_id=client_id, certificate_data=pem_data)
+    else:
+        credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
+
     subscription_client = azure_imports.SubscriptionClient(credential)
 
     return credential, subscription_client
