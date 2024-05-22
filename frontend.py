@@ -10,7 +10,7 @@ import keyring
 try:
     def get_subscriptions(subscription_client, subscription_id):
         if subscription_id:
-            subscriptions = [(subscription_id, subscription.display_name)]
+            subscriptions = [(subscription_id)]
         else:
             subscriptions = [(sub.subscription_id, sub.display_name) for sub in subscription_client.subscriptions.list()]
 
@@ -46,6 +46,17 @@ try:
 
             self.newIdentityButton = QPushButton('New Identity', self)
             self.newIdentityButton.clicked.connect(self.showDialog)
+            self.useCertificateCheckbox = QCheckBox("Use Certificate")
+            self.useCertificateCheckbox.stateChanged.connect(self.toggle_certificate_input)
+
+            self.clientSecretInput = QLineEdit()
+            self.certificatePathInput = QLineEdit()
+            self.browseCertificateButton = QPushButton('Browse')
+            self.browseCertificateButton.clicked.connect(lambda: self.browse_for_certificate(self.certificatePathInput))
+
+            # Initially hide the certificate path input and browse button
+            self.certificatePathInput.hide()
+            self.browseCertificateButton.hide()
             layout.addWidget(self.newIdentityButton)
 
             self.listWidget = QListWidget()
@@ -180,55 +191,85 @@ try:
                     background: none;
                 }
             """)
+        def toggle_certificate_input(self, state):
+            if state == Qt.Checked:
+                self.clientSecretInput.hide()
+                self.certificatePathInput.show()
+                self.browseCertificateButton.show()
+            else:
+                self.clientSecretInput.show()
+                self.certificatePathInput.hide()
+                self.browseCertificateButton.hide()
 
-        def load_identity(self, identity=None):
+        def load_identity(self, identity=None, tenant_id=None, client_id=None, client_secret=None, certificate_path=None):
+            if tenant_id and client_id and (client_secret or certificate_path):
+                self.set_credentials(tenant_id, client_id, client_secret, certificate_path)
+            else:
+                self.load_from_keyring(identity)
+
+        def set_credentials(self, tenant_id, client_id, client_secret, certificate_path):
+            self.tenant_id = tenant_id
+            self.client_id = client_id
+            self.client_secret = client_secret
+            self.certificate_path = certificate_path
+            self.load_subscriptions()
+
+        def load_from_keyring(self, identity):
+            identities = keyring.get_password("Azure", "identities")
+            if not identities:
+                QMessageBox.information(self, "No Identities Available", "There are no saved identities available.")
+                return
+
             if not identity:
-                identities = keyring.get_password("Azure", "identities")
-                if identities:
-                    identities = identities.split(',')
-                    
-                    # Create a custom dialog
-                    dialog = QDialog()
-                    layout = QVBoxLayout()
-
-                    self.comboBox = QComboBox()  # Change here
-                    self.comboBox.addItems(identities)  # And here
-                    layout.addWidget(self.comboBox)
-
-                    delete_button = QPushButton('Delete', self)
-                    delete_button.clicked.connect(lambda: self.delete_identity(self.comboBox.currentText()))  # And here
-                    layout.addWidget(delete_button)
-
-                    ok_button = QPushButton('OK', self)
-                    ok_button.clicked.connect(dialog.accept)
-                    layout.addWidget(ok_button)
-
-                    dialog.setLayout(layout)
-                    result = dialog.exec_()
-
-                    if result == QDialog.Accepted:
-                        identity = self.comboBox.currentText()  # And here
-                        self.current_identity = identity
-                    else:
-                        QMessageBox.information(self, "No Identities Available", "There are no saved identities available.")
-                        return
-
-            self.tenant_id = keyring.get_password("Azure", f"{self.current_identity}_tenant_id")
-            self.client_id = keyring.get_password("Azure", f"{self.current_identity}_client_id")
-            self.client_secret = keyring.get_password("Azure", f"{self.current_identity}_client_secret")
-            self.tenant_id = keyring.get_password("Azure", f"{self.current_identity}_tenant_id")
-            self.client_id = keyring.get_password("Azure", f"{self.current_identity}_client_id")
-            self.client_secret = keyring.get_password("Azure", f"{self.current_identity}_client_secret")
-
-            if self.tenant_id and self.client_id and self.client_secret:
-                try:
-                    _, subscription_client = authenticate_to_azure(self.tenant_id, self.client_id, self.client_secret)
-                    self.subscriptions = get_subscriptions(subscription_client, None)
-                except Exception as _:
-                    QMessageBox.critical(self, "Invalid Credentials", "The provided credentials are invalid.")
+                identity = self.select_identity(identities)
+                if not identity:
                     return
+
+            self.current_identity = identity
+            self.tenant_id = keyring.get_password("Azure", f"{self.current_identity}_tenant_id")
+            self.client_id = keyring.get_password("Azure", f"{self.current_identity}_client_id")
+            self.client_secret = keyring.get_password("Azure", f"{self.current_identity}_client_secret")
+            self.certificate_path = keyring.get_password("Azure", f"{self.current_identity}_certificate_path")
+
+            if self.tenant_id and self.client_id and (self.client_secret or self.certificate_path):
+                self.authenticate_and_load_subscriptions()
             else:
                 QMessageBox.information(self, "No Identities Available", "There are no saved identities available.")
+
+        def select_identity(self, identities):
+            identities = identities.split(',')
+            dialog = self.create_dialog(identities)
+            result = dialog.exec_()
+
+            if result == QDialog.Accepted:
+                return self.comboBox.currentText()
+
+        def create_dialog(self, identities):
+            dialog = QDialog()
+            layout = QVBoxLayout()
+
+            self.comboBox = QComboBox()
+            self.comboBox.addItems(identities)
+            layout.addWidget(self.comboBox)
+
+            delete_button = QPushButton('Delete', self)
+            delete_button.clicked.connect(lambda: self.delete_identity(self.comboBox.currentText()))
+            layout.addWidget(delete_button)
+
+            ok_button = QPushButton('OK', self)
+            ok_button.clicked.connect(dialog.accept)
+            layout.addWidget(ok_button)
+
+            dialog.setLayout(layout)
+            return dialog
+
+        def authenticate_and_load_subscriptions(self):
+            try:
+                _, subscription_client = authenticate_to_azure(self.tenant_id, self.client_id, self.client_secret, self.certificate_path)
+                self.subscriptions = get_subscriptions(subscription_client, None)
+            except Exception as _:
+                QMessageBox.critical(self, "Invalid Credential selection", "The provided credentials are not valid.")
+                return
 
             self.listWidget.clear()
             for id, name in self.subscriptions:
@@ -244,6 +285,14 @@ try:
                 self.scrollArea.show()
             else:
                 self.scrollArea.hide()
+
+        def browse_for_certificate(self, certificate_path_input):
+            options = QFileDialog.Options()
+            options |= QFileDialog.ReadOnly
+            file_name, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
+                                                    "All Files (*);;Python Files (*.py)", options=options)
+            if file_name:
+                certificate_path_input.setText(file_name)
 
         def browse_for_folder(self, output_folder_input):
             folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
@@ -296,52 +345,65 @@ try:
                         other_item.setCheckState(Qt.Unchecked)
 
         def run_main_py(self):
-            if self.selected_subscription_id and self.tenant_id and self.client_id and self.client_secret:
-                self.process = QProcess()
-                self.process.readyReadStandardOutput.connect(self.read_output)
-                self.process.errorOccurred.connect(self.handle_error)
+            if self.selected_subscription_id and self.tenant_id and self.client_id and (self.client_secret or self.certificate_path):
+                self.setup_process()
+                args = self.prepare_args()
+                self.start_and_wait_for_process(args)
+                self.ask_to_open_output_folder()
 
-                # Get the directory of the current script (or executable)
-                dir_path = os.path.dirname(os.path.abspath(__file__))
-                # Prepare the arguments for main.py
-                args = [os.path.join(dir_path, 'main.py'), 
-                        '--subscription_id', self.selected_subscription_id,
-                        '--tenant_id', self.tenant_id,
-                        '--client_id', self.client_id,
-                        '--client_secret', self.client_secret]
+        def setup_process(self):
+            self.process = QProcess()
+            self.process.readyReadStandardOutput.connect(self.read_output)
+            self.process.errorOccurred.connect(self.handle_error)
 
-                # Add the advanced options to the arguments if they are not empty
-                self.extend_args_if_text(args, '--resource_group', self.resourceGroupNameInput)
-                self.extend_args_if_text(args, '--rgtag_key', self.resourceGroupTagKeyInput)
-                self.extend_args_if_text(args, '--rgtag_value', self.resourceGroupTagValueInput)
-                self.extend_args_if_text(args, '--rtag_key', self.resourceTagKeyInput)
-                self.extend_args_if_text(args, '--rtag_value', self.resourceTagValueInput)
-                self.extend_args_if_text(args, '--output_folder', self.output_folder_input)
+        def prepare_args(self):
+            # Get the directory of the current script (or executable)
+            dir_path = os.path.dirname(os.path.abspath(__file__))
+            # Prepare the arguments for main.py
+            args = [os.path.join(dir_path, 'main.py'), 
+                    '--subscription_id', self.selected_subscription_id,
+                    '--tenant_id', self.tenant_id,
+                    '--client_id', self.client_id]
+            self.add_advanced_options(args)
+            return args
 
-                if self.outputExcelCheckbox.isChecked():
-                    args.append('--output_xlsx')
-                if self.outputDrawIOCheckbox.isChecked():
-                    args.append('--output_drawio')
+        def add_advanced_options(self, args):
+            # Add the advanced options to the arguments if they are not empty
+            if self.certificate_path:  # Check if a certificate path is available
+                print(self.certificate_path)
+                args.extend(['--certificate_path', self.certificate_path])
+            elif self.client_secret:  # Otherwise, check if a client secret is available
+                args.extend(['--client_secret', self.client_secret])
+            self.extend_args_if_text(args, '--resource_group', self.resourceGroupNameInput)
+            self.extend_args_if_text(args, '--rgtag_key', self.resourceGroupTagKeyInput)
+            self.extend_args_if_text(args, '--rgtag_value', self.resourceGroupTagValueInput)
+            self.extend_args_if_text(args, '--rtag_key', self.resourceTagKeyInput)
+            self.extend_args_if_text(args, '--rtag_value', self.resourceTagValueInput)
+            self.extend_args_if_text(args, '--output_folder', self.output_folder_input)
+            if self.outputExcelCheckbox.isChecked():
+                args.append('--output_xlsx')
+            if self.outputDrawIOCheckbox.isChecked():
+                args.append('--output_drawio')
 
-                # Start the process with the prepared arguments
-                self.process.start(sys.executable, ['-u'] + args)
+        def start_and_wait_for_process(self, args):
+            # Start the process with the prepared arguments
+            self.process.start(sys.executable, ['-u'] + args)
+            # Wait for the process to finish
+            self.process.waitForFinished()
 
-                # Wait for the process to finish
-                self.process.waitForFinished()
-
-                # Ask the user if they want to open the output folder
-                reply = QMessageBox.question(self, 'Open Output Folder',
-                                            'Do you want to open the output folder?',
-                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
-                if reply == QMessageBox.Yes:
-                    # Open the output folder
-                    if platform.system() == "Windows":
-                        os.startfile(self.output_folder_input.text())
-                    elif platform.system() == "Darwin":
-                        subprocess.call(('open', self.output_folder_input.text()))
-                    else:
-                        subprocess.call(('xdg-open', self.output_folder_input.text()))
+        def ask_to_open_output_folder(self):
+            # Ask the user if they want to open the output folder
+            reply = QMessageBox.question(self, 'Open Output Folder',
+                                        'Do you want to open the output folder?',
+                                        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                # Open the output folder
+                if platform.system() == "Windows":
+                    os.startfile(self.output_folder_input.text())
+                elif platform.system() == "Darwin":
+                    subprocess.call(('open', self.output_folder_input.text()))
+                else:
+                    subprocess.call(('xdg-open', self.output_folder_input.text()))
 
         def extend_args_if_text(self, args, arg_name, input_field):
             if input_field.text():
@@ -363,35 +425,68 @@ try:
             identity_name_input = QLineEdit(dialog)
             tenant_id_input = QLineEdit(dialog)
             client_id_input = QLineEdit(dialog)
-            client_secret_input = QLineEdit(dialog)
             form.addRow('Enter Identity Name:', identity_name_input)
             form.addRow('Enter Tenant ID:', tenant_id_input)
             form.addRow('Enter Client ID:', client_id_input)
-            form.addRow('Enter Client Secret:', client_secret_input)
+            form.addRow('Enter Client Secret:', self.clientSecretInput)
+            form.addRow(self.useCertificateCheckbox)
+            form.addRow('Certificate Path:', self.certificatePathInput)
+            form.addRow(self.browseCertificateButton)
 
             save_button = QPushButton('Save', dialog)
             dontsave_button = QPushButton("Don't Save", dialog)
-            save_button.clicked.connect(lambda: self.save_credentials(identity_name_input.text(), tenant_id_input.text(), client_id_input.text(), client_secret_input.text(), dialog))
-            dontsave_button.clicked.connect(lambda: self.dont_save_credentials(identity_name_input.text(), tenant_id_input.text(), client_id_input.text(), client_secret_input.text(), dialog))
+            save_button.clicked.connect(lambda: self.save_credentials(identity_name_input.text(), tenant_id_input.text(), client_id_input.text(), dialog))
+            dontsave_button.clicked.connect(lambda: self.dont_save_credentials(identity_name_input.text(), tenant_id_input.text(), client_id_input.text(), dialog))
 
             form.addRow(save_button, dontsave_button)
 
             dialog.exec_()
 
-        def save_credentials(self, identity_name, tenant_id, client_id, client_secret, dialog):
+        def load_subscriptions(self):
+            try:
+                _, subscription_client = authenticate_to_azure(self.tenant_id, self.client_id, self.client_secret, self.certificate_path)
+                self.subscriptions = get_subscriptions(subscription_client, None)
+            except Exception as _:
+                QMessageBox.critical(self, "Invalid Credentials", "The provided credentials are invalid.")
+                return
+
+            self.listWidget.clear()
+            for id, name in self.subscriptions:
+                item = QListWidgetItem(f"{name} ({id})")
+                item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+                item.setCheckState(Qt.Unchecked)
+                self.listWidget.addItem(item)
+
+            self.label.setText(f"Selected Profile: {self.current_identity}")
+
+        def save_credentials(self, identity_name, tenant_id, client_id, dialog):
+            if self.useCertificateCheckbox.isChecked():
+                self.certificate_path = self.certificatePathInput.text()
+                self.client_secret = None
+            else:
+                self.certificate_path = None
+                self.client_secret = self.clientSecretInput.text()
+
             self.tenant_id = tenant_id
             self.client_id = client_id
-            self.client_secret = client_secret
 
             try:
-                _, subscription_client = authenticate_to_azure(self.tenant_id, self.client_id, self.client_secret)
+                _, subscription_client = authenticate_to_azure(tenant_id, client_id, self.client_secret, self.certificate_path)
                 self.subscriptions = get_subscriptions(subscription_client, None)
+
+                # Check if the identity name is already in use
+                identities = keyring.get_password("Azure", "identities")
+                if identities and identity_name in identities.split(','):
+                    QMessageBox.critical(self, "Identity Name In Use", "Please choose a different identity name.")
+                    return
 
                 keyring.set_password("Azure", f"{identity_name}_tenant_id", self.tenant_id)
                 keyring.set_password("Azure", f"{identity_name}_client_id", self.client_id)
-                keyring.set_password("Azure", f"{identity_name}_client_secret", self.client_secret)
+                if self.certificate_path:
+                    keyring.set_password("Azure", f"{identity_name}_certificate_path", self.certificate_path)
+                else:
+                    keyring.set_password("Azure", f"{identity_name}_client_secret", self.client_secret)
 
-                identities = keyring.get_password("Azure", "identities")
                 if identities:
                     identities = identities.split(',')
                     identities.append(identity_name)
@@ -399,24 +494,45 @@ try:
                     identities = [identity_name]
                 keyring.set_password("Azure", "identities", ','.join(identities))
 
-                self.current_identity = identity_name
-                self.load_identity(self.current_identity)
-                dialog.accept()
+                # Verify that the credentials were saved correctly
+                if all([keyring.get_password("Azure", f"{identity_name}_tenant_id"),
+                        keyring.get_password("Azure", f"{identity_name}_client_id"),
+                        keyring.get_password("Azure", f"{identity_name}_certificate_path" if self.certificate_path else f"{identity_name}_client_secret")]):
+                    self.current_identity = identity_name
+                    self.load_identity(self.current_identity)
+                    dialog.accept()
+                else:
+                    QMessageBox.critical(self, "Save Failed", "Failed to save the credentials.")
+                    return
+
             except Exception as _:
                 QMessageBox.critical(self, "Invalid Credentials", "The provided credentials are invalid.")
 
-        def dont_save_credentials(self, identity_name, tenant_id, client_id, client_secret, dialog):
+        def dont_save_credentials(self, identity_name, tenant_id, client_id, dialog):
+            if self.useCertificateCheckbox.isChecked():
+                self.certificate_path = self.certificatePathInput.text()
+                self.client_secret = None
+            else:
+                self.certificate_path = None
+                self.client_secret = self.clientSecretInput.text()
+
             self.tenant_id = tenant_id
             self.client_id = client_id
-            self.client_secret = client_secret
 
             # Check if any field is empty
-            if not any([not identity_name.strip(), not tenant_id.strip(), not client_id.strip(), not client_secret.strip()]):
-                self.current_identity = identity_name
-                self.load_identity(self.current_identity)
+            if not any([not identity_name.strip(), not tenant_id.strip(), not client_id.strip()]):
+                if self.certificate_path and not self.certificate_path.strip():
+                    QMessageBox.critical(self, "Invalid Certificate Path", "The provided certificate path is invalid.")
+                    return
+                elif self.client_secret and not self.client_secret.strip():
+                    QMessageBox.critical(self, "Invalid Client Secret", "The provided client secret is invalid.")
+                    return
+                else:
+                    self.current_identity = identity_name
+                    self.load_subscriptions()  # Call load_subscriptions here
             else:
                 self.current_identity = "Unsaved Identity"
-                        
+                            
             dialog.accept()
 
     if __name__ == '__main__':
