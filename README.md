@@ -11,7 +11,7 @@ Cloud-Infra-Visualization is an open-source tool designed to programmatically cr
 ## ✅ Currently Implemented Features
 
 ### Trello Board:
-You can view our progress and upcoming features on our [Trello board](https://trello.com/b/wuSdQR4P/cloud-visualization-project).
+You can view our progress and upcoming features on our [Github Project](https://github.com/users/sander110419/projects/2).
 
 ### Azure:
 We currently support MOST Azure resourcetypes.
