@@ -1,6 +1,6 @@
 # Cloud-Infra-Visualization ☁️
 
-Cloud-Infra-Visualization is an open-source tool designed to programmatically create infrastructure designs and diagrams for all major cloud vendors (current focus is Microsoft Azure). This project aims to simplify the process of visualizing your cloud infrastructure, making it easier to understand and manage.
+Cloud-Infra-Visualization is an open-source tool that enables you to create infrastructure designs and diagrams for major cloud vendors programmatically. The current focus of this project is Microsoft Azure. The goal of this project is to simplify the process of visualizing your cloud infrastructure, making it easier to understand and manage.
 
 [![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/summary/new_code?id=sander110419_Cloud-infra-visualization)  
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=sander110419_Cloud-infra-visualization&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=sander110419_Cloud-infra-visualization)
@@ -8,21 +8,23 @@ Cloud-Infra-Visualization is an open-source tool designed to programmatically cr
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=sander110419_Cloud-infra-visualization&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=sander110419_Cloud-infra-visualization)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=sander110419_Cloud-infra-visualization&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=sander110419_Cloud-infra-visualization)  
 
-## ✅ Currently Implemented Features
+For more detailed information, please refer to our [documentation](https://github.com/sander110419/Cloud-infra-visualization/wiki).
 
-### Project Board:
+## Project Board:
 You can view our progress and upcoming features on our [Github Project](https://github.com/users/sander110419/projects/2).
 
+## ✅ Currently Implemented Features
+
 ### Azure:
-We currently support MOST Azure resourcetypes.
+We currently support MOST Azure resource types.
 
 ### What does it do (as of now):
-- Get all or selected subscriptions
-- Iterate over all these and gets all or selected resource groups
-- Iterate over all or selected resource groups and gets all resources.
-- Output an excel file with all technical configuration details of all resources
-- Output a draw.io diagram which connects all resources to resource groups, DBs to servers, disks to VMs etc.
-- Output a json file containing all the technical data to process in other tools.
+- Retrieves all or selected subscriptions.
+- Iterates over these subscriptions and gets all or selected resource groups.
+- Iterates over all or selected resource groups and retrieves all resources.
+- Outputs an excel file with all technical configuration details of all resources.
+- Outputs a draw.io diagram which connects all resources to resource groups, DBs to servers, disks to VMs etc.
+- Outputs a json file containing all the technical data to process in other tools.
 
 ## 🚀 How to Run
 
