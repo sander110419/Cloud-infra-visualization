@@ -12,19 +12,26 @@ def create_workbook():
 def process_resource(resource):
     details = resource['Details']
     df = pd.json_normalize(details)
-    
+
     # Extract the 'type' field from the dataframe
     resource_type_df = df['type'].values[0] if 'type' in df.columns else ''
-    
+
     safe_resource_type_df = resource_type_df.replace('Microsoft.', '').replace('/', '_').lower()
-    
+
     # Fall back to using ResourceType if type field is empty
     if not safe_resource_type_df:
         resource_type = resource['ResourceType']
         safe_resource_type = resource_type.replace('Microsoft.', '').replace('/', '_').lower()
     else:
         safe_resource_type = safe_resource_type_df
-    
+
+    # Convert the resource type name to a human-friendly format
+    parts = safe_resource_type.split('_')
+    if len(parts) > 1:
+        service_name = parts[0].capitalize()
+        resource_type_name = " ".join([part.capitalize() for part in parts[1:]])
+        safe_resource_type = f"{service_name} - {resource_type_name}"
+
     fixed_columns_order = ['type', 'id', 'name']
     for column in fixed_columns_order:
         if column not in df.columns:
@@ -43,7 +50,7 @@ def process_resource(resource):
 
 def update_resource_types(safe_resource_type, df, resource_types):
     if len(safe_resource_type) > 31:
-        safe_resource_type = safe_resource_type[:30]
+        safe_resource_type = safe_resource_type[:31]
     if safe_resource_type not in resource_types:
         other_columns = [col for col in df.columns.tolist() if col not in ['type', 'id', 'name', 'subscription_id'] and not col.startswith('tag.')]
         tag_columns = [col for col in df.columns.tolist() if col.startswith('tag.')]
