@@ -132,3 +132,8 @@ I'd love this to one day be a viable replacement for tools like Cloudockit, Holo
 ## 📜 License
 
 This project is available under the GPL-3.0 license.
+
+## Contribute
+
+Feel like contributing to the project? [More info here](https://github.com/sander110419/Cloud-infra-visualization/blob/main/CONTRIBUTING.md)  
+You can get also contact me via the project Discord Channel [HERE](https://discord.gg/MurEkZQBEb)
