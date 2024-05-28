@@ -147,7 +147,17 @@ try:
                     color: #DCDCDC;
                 }
                 QCheckBox {
+                    background-color: light gray,
+                    padding: 5px;
                     spacing: 5px;
+                }
+                QCheckBox::indicator:checked {
+                    background-color: blue;
+                    border: 2px solid black;
+                }
+                QCheckBox::indicator:unchecked {
+                    background-color: white;
+                    border: 2px solid black;
                 }
                 QCheckBox::indicator {
                     width: 13px;
