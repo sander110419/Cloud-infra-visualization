@@ -146,7 +146,7 @@ try:
                     border: none;
                     color: #DCDCDC;
                 }
-                    QCheckBox {
+                QCheckBox {
                     background-color: light gray,
                     padding: 5px;
                     spacing: 5px;
