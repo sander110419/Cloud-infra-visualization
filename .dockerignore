@@ -1,0 +1,15 @@
+__pycache__
+.vscode/settings.json
+test.py
+CloudInfraViz.log
+azure_func/__pycache__
+output/~$output.xlsx
+output/output.drawio
+output/output.xlsx
+output/output.json
+example output/*
+.github
+.venv
+LICENSE
+README.md
+CONTRIBUTING.md
