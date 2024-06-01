@@ -348,9 +348,10 @@ def generate_output():
     if args.output_drawio:
         write_drawio(output_folder, output_json_file)
 
-    # Generate Word document
-    data = read_json(output_folder, output_json_file)  # Read the JSON data
-    generate_word_document(data, output_folder)  # Generate the Word document
+    # Output to dockx is requested
+    if args.output_docx:
+        data = read_json(output_folder, output_json_file)  # Read the JSON data
+        generate_word_document(data, output_folder)  # Generate the Word document
 
 if __name__ == "__main__":
     generate_output()

@@ -34,6 +34,7 @@ def parse_arguments():
 
     #output args
     parser.add_argument('--output_xlsx', action='store_true', help='Output to Excel')
+    parser.add_argument('--output_docx', action='store_true', help='Output to Docx')
     parser.add_argument('--output_folder', type=str, required=False, help='Output Folder')
     parser.add_argument('--output_drawio', action='store_true', help='Output to XML')
 
