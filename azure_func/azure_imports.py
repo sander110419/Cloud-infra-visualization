@@ -1,4 +1,4 @@
-from azure.identity import ClientSecretCredential
+from azure.identity import ClientSecretCredential, DeviceCodeCredential
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.subscription import SubscriptionClient
 from azure.mgmt.network import NetworkManagementClient
