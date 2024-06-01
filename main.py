@@ -17,7 +17,7 @@ set_up_logging(args.log_level)
 #initialise data
 data, start_time = initialize_data()
 #authenticate to Azure
-credential, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, args.client_secret, args.certificate_path)
+credential, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, args.client_secret, args.certificate_path, args.use_device_code)
 #Get all subscriptions from erguments
 subscriptions = get_subscriptions(subscription_client, args.subscription_id)
 
@@ -262,6 +262,46 @@ def update_progress_bar(total_resources, rg, total_resourcegroups, processing_ti
         print(f"{total_resources} resources left to process in RG {rg.name}, {total_resourcegroups} RG's left. Estimated time remaining: {str(estimated_remaining_td)}")
     total_resourcegroups -= 1
 
+def authenticate(args):
+    client_secret = None if args.use_device_code or args.certificate_path else args.client_secret
+    certificate_path = None if args.use_device_code else args.certificate_path
+    _, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, client_secret, certificate_path, args.use_device_code)
+    return subscription_client
+
+def create_directory(output_folder):
+    try:
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+    except Exception as e:
+        logging.error(f"Error creating directory: {e}")
+
+def write_json(data, output_folder, output_json_file):
+    try:
+        with open(os.path.join(output_folder, output_json_file), 'w') as f:
+            json.dump(data, f, cls=CustomEncoder)
+    except Exception as e:
+        logging.error(f"Error writing to JSON file: {e}")
+
+def read_json(output_folder, output_json_file):
+    try:
+        with open(os.path.join(output_folder, output_json_file)) as f:
+            data = json.load(f)
+    except Exception as e:
+        logging.error(f"Error reading from JSON file: {e}")
+    return data
+
+def write_excel(data, output_folder):
+    try:
+        output_to_excel(data, output_folder)
+    except Exception as e:
+        logging.error(f"Error writing to Excel file: {e}")
+
+def write_drawio(output_folder, output_json_file):
+    try:
+        subprocess.call(['python', os.path.join('.', 'azure_func', 'json2xml.py'), os.path.join(output_folder, output_json_file), os.path.join(output_folder, 'output.drawio')])
+    except Exception as e:
+        logging.error(f"Error writing to DrawIO file: {e}")
+
 def generate_output():
     #parse arguments
     args = parse_arguments()
@@ -270,11 +310,8 @@ def generate_output():
     #initialise data
     data, start_time = initialize_data()
     #authenticate to Azure
-    # If certificate_path is provided, pass None as client_secret
-    if args.certificate_path:
-        _, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, None, args.certificate_path)
-    else:
-        _, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, args.client_secret)
+    subscription_client = authenticate(args)
+
     #Get all subscriptions from erguments
     subscriptions = get_subscriptions(subscription_client, args.subscription_id)
 
@@ -293,40 +330,22 @@ def generate_output():
     output_folder = args.output_folder if args.output_folder else os.path.join('.', 'output')
     output_json_file = 'output.json'
     # Create output directory if it does not exist
-    try:
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
-    except Exception as e:
-        logging.error(f"Error creating directory: {e}")
+    create_directory(output_folder)
 
     # Output JSON
-    try:
-        with open(os.path.join(output_folder, output_json_file), 'w') as f:
-            json.dump(data, f, cls=CustomEncoder)
-    except Exception as e:
-        logging.error(f"Error writing to JSON file: {e}")
+    write_json(data, output_folder, output_json_file)
 
     # Output to excel is requested
     if args.output_xlsx:
         # Load your JSON data
-        try:
-            with open(os.path.join(output_folder, output_json_file)) as f:
-                data = json.load(f)
-        except Exception as e:
-            logging.error(f"Error reading from JSON file: {e}")
+        data = read_json(output_folder, output_json_file)
         
         # Write xlsx file
-        try:
-            output_to_excel(data, output_folder)
-        except Exception as e:
-            logging.error(f"Error writing to Excel file: {e}")
+        write_excel(data, output_folder)
 
     # Output to drawio is requested
     if args.output_drawio:
-        try:
-            subprocess.call(['python', os.path.join('.', 'azure_func', 'json2xml.py'), os.path.join(output_folder, output_json_file), os.path.join(output_folder, 'output.drawio')])
-        except Exception as e:
-            logging.error(f"Error writing to DrawIO file: {e}")
+        write_drawio(output_folder, output_json_file)
 
 if __name__ == "__main__":
     generate_output()

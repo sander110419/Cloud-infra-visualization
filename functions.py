@@ -21,6 +21,7 @@ def parse_arguments():
     parser.add_argument('--client_id', type=str, required=True, help='Client ID')
     parser.add_argument('--client_secret', type=str, required=False, help='Client Secret')
     parser.add_argument('--certificate_path', type=str, required=False, help='Path to the certificate file')
+    parser.add_argument('--use_device_code', action='store_true', help='Use device code authentication')
     
     #filter args
     parser.add_argument('--subscription_id', type=str, required=False, help='Subscription ID')
@@ -62,8 +63,11 @@ def initialize_data():
 
     return data, start_time
 
-def authenticate_to_azure(tenant_id, client_id, client_secret, certificate_path=None):
-    if certificate_path:
+def authenticate_to_azure(tenant_id, client_id, client_secret=None, certificate_path=None, use_device_code=False):
+    if use_device_code:
+        # Use DeviceCodeCredential when use_device_code is True
+        credential = azure_imports.DeviceCodeCredential(client_id=client_id, tenant_id=tenant_id)
+    elif certificate_path:
         try:
             with open(certificate_path, "rb") as file:
                 pem_data = file.read()
