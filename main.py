@@ -9,6 +9,7 @@ from azure_func import azure_imports
 from datetime import timedelta
 import subprocess
 from azure_func.resource_functions import *
+from json2docx import generate_word_document
 
 #parse arguments
 args = parse_arguments()
@@ -346,6 +347,10 @@ def generate_output():
     # Output to drawio is requested
     if args.output_drawio:
         write_drawio(output_folder, output_json_file)
+
+    # Generate Word document
+    data = read_json(output_folder, output_json_file)  # Read the JSON data
+    generate_word_document(data, output_folder)  # Generate the Word document
 
 if __name__ == "__main__":
     generate_output()
