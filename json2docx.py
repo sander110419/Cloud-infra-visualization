@@ -1,11 +1,30 @@
 from docx import Document
-from docx.shared import Pt
-
+from docx.shared import Pt, Inches
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
 import re
 
 def create_document():
     doc = Document()
+    section = doc.sections[0]
+    section.page_height = Inches(11.69)
+    section.page_width = Inches(8.27)
+    section.left_margin = Inches(1)
+    section.right_margin = Inches(1)
+    section.top_margin = Inches(1)
+    section.bottom_margin = Inches(1)
     return doc
+
+def set_column_widths_oxml(table, widths):
+    tbl = table._tbl  # Access the underlying <w:tbl> element
+    tbl_grid = OxmlElement('w:tblGrid')
+
+    for width in widths:
+        grid_col = OxmlElement('w:gridCol')
+        grid_col.set(qn('w:w'), str(width))
+        tbl_grid.append(grid_col)
+    
+    tbl.insert(0, tbl_grid)
 
 def add_subscription_table(doc, data):
     subscriptions = data['Objects']
@@ -95,6 +114,10 @@ def add_heading(doc, resource_type, resource_name, level=3):
 
 def add_dict_as_table(doc, value_dict, level):
     table = doc.add_table(rows=0, cols=2)
+
+    # Set column widths: first column narrower than the second
+    set_column_widths_oxml(table, [3500, 250])  # Widths are in twentieths of a point, 2160 for ~1 inch and 7560 for ~3.5 inches
+
     for attr, val in value_dict.items():
         if isinstance(val, dict):  # Check if the attribute value is a dictionary
             # Add this attribute as a separate table with 'attribute' as a header
