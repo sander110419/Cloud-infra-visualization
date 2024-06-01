@@ -17,7 +17,7 @@ set_up_logging(args.log_level)
 #initialise data
 data, start_time = initialize_data()
 #authenticate to Azure
-credential, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, args.client_secret, args.certificate_path, args.use_device_code)
+credential, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, args.client_secret, args.certificate_path, args.use_device_code, args.interactive_login)
 #Get all subscriptions from erguments
 subscriptions = get_subscriptions(subscription_client, args.subscription_id)
 
@@ -263,9 +263,9 @@ def update_progress_bar(total_resources, rg, total_resourcegroups, processing_ti
     total_resourcegroups -= 1
 
 def authenticate(args):
-    client_secret = None if args.use_device_code or args.certificate_path else args.client_secret
+    client_secret = None if args.use_device_code or args.certificate_path or args.interactive_login else args.client_secret
     certificate_path = None if args.use_device_code else args.certificate_path
-    _, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, client_secret, certificate_path, args.use_device_code)
+    _, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, client_secret, certificate_path, args.use_device_code, args.interactive_login)
     return subscription_client
 
 def create_directory(output_folder):
