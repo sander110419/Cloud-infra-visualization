@@ -4,7 +4,7 @@ import time
 import json
 import logging
 from azure_func import azure_imports
-from azure.identity import ClientSecretCredential, CertificateCredential
+from azure.identity import ClientSecretCredential, CertificateCredential, InteractiveBrowserCredential
 
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -22,7 +22,8 @@ def parse_arguments():
     parser.add_argument('--client_secret', type=str, required=False, help='Client Secret')
     parser.add_argument('--certificate_path', type=str, required=False, help='Path to the certificate file')
     parser.add_argument('--use_device_code', action='store_true', help='Use device code authentication')
-    
+    parser.add_argument('--interactive_login', action='store_true', help='Use interactive login')
+   
     #filter args
     parser.add_argument('--subscription_id', type=str, required=False, help='Subscription ID')
     parser.add_argument('--resource_group', type=str, required=False, help='Resource Group')
@@ -63,8 +64,10 @@ def initialize_data():
 
     return data, start_time
 
-def authenticate_to_azure(tenant_id, client_id, client_secret=None, certificate_path=None, use_device_code=False):
-    if use_device_code:
+def authenticate_to_azure(tenant_id, client_id, client_secret=None, certificate_path=None, use_device_code=None, interactive_login=False):
+    if interactive_login:
+        credential = InteractiveBrowserCredential(client_id=client_id)
+    elif use_device_code:
         # Use DeviceCodeCredential when use_device_code is True
         credential = azure_imports.DeviceCodeCredential(client_id=client_id, tenant_id=tenant_id)
     elif certificate_path:
