@@ -76,9 +76,11 @@ try:
 
             self.outputExcelCheckbox = QCheckBox("Output to Excel")
             self.outputDrawIOCheckbox = QCheckBox("Output to DrawIO")
+            self.outputDocxCheckbox = QCheckBox("Output to Docx")
 
             self.advancedLayout.addWidget(self.outputExcelCheckbox)
             self.advancedLayout.addWidget(self.outputDrawIOCheckbox)
+            self.advancedLayout.addWidget(self.outputDocxCheckbox)
 
             self.resourceGroupNameInput = QLineEdit()
             self.resourceGroupTagKeyInput = QLineEdit()
@@ -394,6 +396,8 @@ try:
                 args.append('--output_xlsx')
             if self.outputDrawIOCheckbox.isChecked():
                 args.append('--output_drawio')
+            if self.outputDocxCheckbox.isChecked():
+                args.append('--output_docx')
 
         def start_and_wait_for_process(self, args):
             # Start the process with the prepared arguments
