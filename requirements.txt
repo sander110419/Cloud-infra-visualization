@@ -50,3 +50,4 @@ uuid
 lxml
 PyQt5
 keyring
+python-docx
