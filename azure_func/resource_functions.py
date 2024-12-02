@@ -163,7 +163,7 @@ def handle_scheduler_job_collection(resource, rg, scheduler_client):
 def handle_search_service(resource, rg, search_client):
     return handle_resource(search_client.services.get, rg, resource)
 
-def handle_service_bus_namespaces(rg, resource, servicebus_client):
+def handle_service_bus_namespaces(resource, rg, servicebus_client):
     return handle_resource(servicebus_client.namespaces.get, rg, resource)
 
 def handle_service_fabric_cluster(resource, rg, sf_client):
