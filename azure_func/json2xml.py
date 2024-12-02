@@ -58,6 +58,16 @@ for subscription_id, resource_groups in data['Objects'].items():
                 # Store the resource detail using its id as the key
                 all_resources[detail['id']] = detail
 
+# Define initial positions and increments
+initial_x = 360
+initial_y = 540
+x_increment = 150
+y_increment = 100
+
+# Initialize current positions
+current_x = initial_x
+current_y = initial_y
+
 # Iterate over the objects in the JSON data again to create the nodes and edges
 for subscription_id, resource_groups in data['Objects'].items():
     for resource_group, resources in resource_groups.items():
@@ -69,7 +79,10 @@ for subscription_id, resource_groups in data['Objects'].items():
             'vertex': "1",
             'parent': "1"
         })
-        ET.SubElement(rg_node, 'mxGeometry', {'x': "360", 'y': "540", 'width': "120", 'height': "60", 'as': "geometry"})
+        ET.SubElement(rg_node, 'mxGeometry', {'x': str(current_x), 'y': str(current_y), 'width': "120", 'height': "60", 'as': "geometry"})
+
+        # Update the current position for the next node
+        current_y += y_increment
 
         for resource in resources:
             details = resource['Details']
@@ -98,7 +111,10 @@ for subscription_id, resource_groups in data['Objects'].items():
                     'vertex': "1",
                     'parent': "1"
                 })
-                ET.SubElement(resource_node, 'mxGeometry', {'x': "360", 'y': "650", 'width': "120", 'height': "60", 'as': "geometry"})
+                ET.SubElement(resource_node, 'mxGeometry', {'x': str(current_x), 'y': str(current_y), 'width': "120", 'height': "60", 'as': "geometry"})
+
+                # Update the current position for the next node
+                current_y += y_increment
 
                 # Create an edge between the resource group and the resource
                 edge = ET.SubElement(root, 'mxCell', {
