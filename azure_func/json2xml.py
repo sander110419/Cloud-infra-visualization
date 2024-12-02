@@ -64,6 +64,15 @@ initial_y = 540
 x_increment = 150
 y_increment = 100
 
+# Define x offsets for each resource type
+x_offsets = {
+    "Microsoft.Sql/servers/databases": 0,
+    "Microsoft.Web/sites": 200,
+    "Microsoft.Compute/disks": 400,
+    "Microsoft.Compute/virtualMachines": 600,
+    "Microsoft.Network/privateEndpoints": 800
+}
+
 # Initialize current positions
 current_x = initial_x
 current_y = initial_y
@@ -103,6 +112,10 @@ for subscription_id, resource_groups in data['Objects'].items():
                 # Add the id to the set
                 unique_ids.add(detail['id'])
 
+                # Determine the x offset based on the resource type
+                resource_type = resource['ResourceType']
+                x_offset = x_offsets.get(resource_type, 0)
+
                 # Create a node for each resource detail
                 resource_node = ET.SubElement(root, 'mxCell', {
                     'id': f"resource-{detail['id']}",
@@ -111,7 +124,7 @@ for subscription_id, resource_groups in data['Objects'].items():
                     'vertex': "1",
                     'parent': "1"
                 })
-                ET.SubElement(resource_node, 'mxGeometry', {'x': str(current_x), 'y': str(current_y), 'width': "120", 'height': "60", 'as': "geometry"})
+                ET.SubElement(resource_node, 'mxGeometry', {'x': str(current_x + x_offset), 'y': str(current_y), 'width': "120", 'height': "60", 'as': "geometry"})
 
                 # Update the current position for the next node
                 current_y += y_increment
@@ -176,22 +189,6 @@ for subscription_id, resource_groups in data['Objects'].items():
                         ET.SubElement(points, 'mxPoint', {'x': "0", 'y': "0"})
 
                 # If the resource is a VM, create an edge to its NIC
-                if resource['ResourceType'] == "Microsoft.Compute/virtualMachines":
-                    if 'network_profile' in detail and 'network_interfaces' in detail['network_profile']:
-                        nic_id = detail['network_profile']['network_interfaces'][0]['id']
-                        if nic_id in all_resources:
-                            edge = ET.SubElement(root, 'mxCell', {
-                                'style': edge_style,
-                                'edge': "1",
-                                'parent': "1",
-                                'source': f"resource-{detail['id']}",
-                                'target': f"resource-{nic_id}"
-                            })
-                            edge_geometry = ET.SubElement(edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
-                            points = ET.SubElement(edge_geometry, 'Array', {'as': "points"})
-                            ET.SubElement(points, 'mxPoint', {'x': "0", 'y': "0"})
-
-                # If the resource is a VM, create an edge to its NIC and its extensions
                 if resource['ResourceType'] == "Microsoft.Compute/virtualMachines":
                     if 'network_profile' in detail and 'network_interfaces' in detail['network_profile']:
                         nic_id = detail['network_profile']['network_interfaces'][0]['id']
