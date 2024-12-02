@@ -44,7 +44,26 @@ def handle_app_service_plan(resource, rg, web_client):
     return handle_resource(web_client.app_service_plans.get, rg, resource)
 
 def handle_appservices(resource, rg, web_client):
+    # check if appservice is funtionapp
+    #if resource.kind == "functionapp":
+    #    return handle_function_app(resource, rg, web_client)
     return handle_resource(web_client.web_apps.get, rg, resource)
+
+def handle_function_app(resource, rg, web_client):
+    try:
+        # Get all functions for this app
+        functions = web_client.web_apps.list_functions(rg.name, resource.name)
+
+        # Initialize an empty dictionary
+        function_list = []
+
+        # Iterate over each function and add it to the dictionary
+        for function in functions:
+            function_list.append(function.as_dict())
+        return function_list
+    except Exception as e:
+        return {'Error': str(e)}
+    
 
 def handle_batch_account(resource, rg, batch_client):
     return handle_resource(batch_client.batch_account.get, rg, resource)
