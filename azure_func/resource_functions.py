@@ -63,7 +63,9 @@ def handle_function_app(resource, rg, web_client):
         return function_list
     except Exception as e:
         return {'Error': str(e)}
-    
+
+def handle_app_configuration(resource, rg, appconfig_client):
+    return handle_resource(appconfig_client.configuration_stores.get, rg, resource)    
 
 def handle_batch_account(resource, rg, batch_client):
     return handle_resource(batch_client.batch_account.get, rg, resource)
