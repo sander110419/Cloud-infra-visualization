@@ -79,7 +79,10 @@ def get_resource_handlers():
         'Microsoft.Sql/servers/databases': [(handle_sql_db, 'sql')],
         'Microsoft.Compute/disks': [(handle_disk, 'compute')],
         'Microsoft.Web/serverFarms': [(handle_app_service_plan, 'web')],
-        'Microsoft.Web/sites': [(handle_appservices, 'web')],
+        'Microsoft.Web/sites': [
+            (handle_appservices, 'web'),
+            (handle_function_app, 'web')
+        ],
         'Microsoft.KeyVault/vaults': [(handle_key_vault, 'keyvault')],
         'Microsoft.OperationalInsights/workspaces': [(handle_log_analytics_workspace, 'log_analytics')],
         'Microsoft.Storage/storageAccounts': [(handle_storage_account, 'storage')],

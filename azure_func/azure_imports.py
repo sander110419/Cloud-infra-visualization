@@ -43,3 +43,4 @@ from azure.mgmt.communication import CommunicationServiceManagementClient
 from azure.mgmt.alertsmanagement import AlertsManagementClient
 from azure.mgmt.appcontainers import ContainerAppsAPIClient
 from azure.mgmt.datamigration import DataMigrationManagementClient
+from azure.mgmt.appconfiguration import AppConfigurationManagementClient

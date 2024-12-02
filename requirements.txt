@@ -43,6 +43,7 @@ azure-mgmt-communication
 azure-mgmt-datamigration
 azure-mgmt-alertsmanagement
 azure-mgmt-appcontainers
+azure.mgmt.appconfiguration
 pandas
 openpyxl
 azure.identity

@@ -44,7 +44,28 @@ def handle_app_service_plan(resource, rg, web_client):
     return handle_resource(web_client.app_service_plans.get, rg, resource)
 
 def handle_appservices(resource, rg, web_client):
+    # check if appservice is funtionapp
+    #if resource.kind == "functionapp":
+    #    return handle_function_app(resource, rg, web_client)
     return handle_resource(web_client.web_apps.get, rg, resource)
+
+def handle_function_app(resource, rg, web_client):
+    try:
+        # Get all functions for this app
+        functions = web_client.web_apps.list_functions(rg.name, resource.name)
+
+        # Initialize an empty dictionary
+        function_list = []
+
+        # Iterate over each function and add it to the dictionary
+        for function in functions:
+            function_list.append(function.as_dict())
+        return function_list
+    except Exception as e:
+        return {'Error': str(e)}
+
+def handle_app_configuration(resource, rg, appconfig_client):
+    return handle_resource(appconfig_client.configuration_stores.get, rg, resource)    
 
 def handle_batch_account(resource, rg, batch_client):
     return handle_resource(batch_client.batch_account.get, rg, resource)
@@ -163,7 +184,7 @@ def handle_scheduler_job_collection(resource, rg, scheduler_client):
 def handle_search_service(resource, rg, search_client):
     return handle_resource(search_client.services.get, rg, resource)
 
-def handle_service_bus_namespaces(rg, resource, servicebus_client):
+def handle_service_bus_namespaces(resource, rg, servicebus_client):
     return handle_resource(servicebus_client.namespaces.get, rg, resource)
 
 def handle_service_fabric_cluster(resource, rg, sf_client):
