@@ -50,10 +50,15 @@ for subscription_id, resource_groups in data['Objects'].items():
                 details = [details]  # Make it a list to unify the handling
 
             for detail in details:
+                # Skip if detail is an error response
+                if isinstance(detail, dict) and 'Error' in detail:
+                    print(f"Skipping resource due to error: {detail['Error']}")
+                    continue
+
                 # Check if 'id' exists in detail
                 if 'id' not in detail:
-                    print(f"Warning: Missing 'id' in detail: {detail}")
-                    continue  # Skip this detail
+                    print(f"Skipping resource - missing 'id' in detail: {detail}")
+                    continue
 
                 # Store the resource detail using its id as the key
                 all_resources[detail['id']] = detail
@@ -157,8 +162,9 @@ for subscription_id, resource_groups in data['Objects'].items():
 
                 # If the resource is a web app, create an edge to its app service plan
                 if resource['ResourceType'] == "Microsoft.Web/sites":
-                    server_farm_id = detail['server_farm_id']
-                    if server_farm_id in all_resources:
+                    # Add error handling for missing server_farm_id
+                    server_farm_id = detail.get('server_farm_id')
+                    if server_farm_id and server_farm_id in all_resources:
                         edge = ET.SubElement(root, 'mxCell', {
                             'style': edge_style,
                             'edge': "1",
