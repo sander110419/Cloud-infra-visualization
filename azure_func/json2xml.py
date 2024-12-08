@@ -1,6 +1,95 @@
 import sys
 import json
 import xml.etree.ElementTree as ET
+from collections import defaultdict
+import hashlib
+
+def sanitize_id(resource_id):
+    """Generate a unique and XML-friendly ID from the resource ID."""
+    # Create a hash of the resource ID to ensure uniqueness and remove invalid characters
+    return f"resource-{hashlib.md5(resource_id.encode('utf-8')).hexdigest()}"
+
+def create_unique_id(resource_id, existing_ids):
+    """Create a unique ID and ensure it hasn't been used before."""
+    sanitized_id = sanitize_id(resource_id)
+    counter = 1
+    unique_id = sanitized_id
+    while unique_id in existing_ids:
+        unique_id = f"{sanitized_id}-{counter}"
+        counter += 1
+    existing_ids.add(unique_id)
+    return unique_id
+
+def determine_relationships(detail, resource_id, parent_child_map):
+    """Determine all possible parent-child relationships for an Azure resource"""
+    
+    # SQL Server -> Database relationship
+    if detail.get('type') == "Microsoft.Sql/servers/databases":
+        server_id = '/'.join(resource_id.split('/')[:-2])
+        if server_id in all_resources:
+            parent_child_map[server_id].append(resource_id)
+    
+    # VM -> Managed Disk relationship
+    if 'managed_by' in detail:
+        parent_child_map[detail['managed_by']].append(resource_id)
+    
+    # Web App -> App Service Plan relationship
+    if 'server_farm_id' in detail:
+        parent_child_map[detail['server_farm_id']].append(resource_id)
+    
+    # VM -> NIC relationship
+    if 'network_profile' in detail and 'network_profile' in detail and 'network_interfaces' in detail['network_profile']:
+        for nic in detail['network_profile']['network_interfaces']:
+            parent_child_map[resource_id].append(nic['id'])
+    
+    # VM -> Extensions relationship
+    if 'resources' in detail:
+        for ext in detail['resources']:
+            parent_child_map[resource_id].append(ext['id'])
+    
+    # Private Endpoint -> NIC relationship
+    if detail.get('type') == "Microsoft.Network/privateEndpoints" and 'network_interfaces' in detail:
+        for nic in detail['network_interfaces']:
+            parent_child_map[resource_id].append(nic['id'])
+    
+    # Storage Account -> File/Blob/Queue/Table Services
+    if detail.get('type') == "Microsoft.Storage/storageAccounts":
+        for service in ['blob', 'file', 'queue', 'table']:
+            service_id = f"{resource_id}/{service}Services/default"
+            if service_id in all_resources:
+                parent_child_map[resource_id].append(service_id)
+    
+    # App Service -> Deployment Slots
+    if detail.get('type') == "Microsoft.Web/sites":
+        for slot in detail.get('slots', []):
+            parent_child_map[resource_id].append(slot['id'])
+    
+    # Key Vault -> Keys/Secrets/Certificates
+    if detail.get('type') == "Microsoft.KeyVault/vaults":
+        for entity_type in ['keys', 'secrets', 'certificates']:
+            for entity in detail.get(entity_type, []):
+                parent_child_map[resource_id].append(entity['id'])
+    
+    # Load Balancer -> Backend Pools
+    if detail.get('type') == "Microsoft.Network/loadBalancers":
+        for pool in detail.get('backendAddressPools', []):
+            parent_child_map[resource_id].append(pool['id'])
+    
+    # VNET -> Subnets
+    if detail.get('type') == "Microsoft.Network/virtualNetworks":
+        for subnet in detail.get('subnets', []):
+            parent_child_map[resource_id].append(subnet['id'])
+    
+    # NIC -> IP Configurations
+    if detail.get('type') == "Microsoft.Network/networkInterfaces":
+        for ip_config in detail.get('ipConfigurations', []):
+            parent_child_map[resource_id].append(ip_config['id'])
+    
+    # Application Gateway -> Backend Pools, HTTP Settings, etc.
+    if detail.get('type') == "Microsoft.Network/applicationGateways":
+        for component in ['backendAddressPools', 'backendHttpSettingsCollection', 'frontendIPConfigurations']:
+            for item in detail.get(component, []):
+                parent_child_map[resource_id].append(item['id'])
 
 # Check if the correct number of arguments are provided
 if len(sys.argv) != 3:
@@ -32,219 +121,169 @@ root = ET.SubElement(mxGraphModel, 'root')
 ET.SubElement(root, 'mxCell', {'id': "0"})
 ET.SubElement(root, 'mxCell', {'id': "1", 'parent': "0"})
 
-# Create a dictionary to store all resources
+# Create dictionaries and sets
 all_resources = {}
+parent_child_map = defaultdict(list)
+resource_group_resources = defaultdict(list)
+existing_ids = set()  # Set to keep track of all assigned IDs
 
-# Create a set to store unique ids
-unique_ids = set()
+# Define the default edge style
+edge_style = "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;"
 
-# Define the default edge (line) syle between resources
-edge_style = "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;"
-
-# Iterate over the objects in the JSON data to populate the all_resources dictionary
+# First pass: Collect all resources
 for subscription_id, resource_groups in data['Objects'].items():
     for resource_group, resources in resource_groups.items():
         for resource in resources:
             details = resource['Details']
             if isinstance(details, dict):
-                details = [details]  # Make it a list to unify the handling
+                details = [details]
 
             for detail in details:
-                # Skip if detail is an error response
                 if isinstance(detail, dict) and 'Error' in detail:
-                    print(f"Skipping resource due to error: {detail['Error']}")
                     continue
-
-                # Check if 'id' exists in detail
                 if 'id' not in detail:
-                    print(f"Skipping resource - missing 'id' in detail: {detail}")
                     continue
 
-                # Store the resource detail using its id as the key
                 all_resources[detail['id']] = detail
+                resource_group_resources[resource_group].append(detail['id'])
 
-# Define initial positions and increments
+# Second pass: Determine parent-child relationships
+for resource_id, detail in all_resources.items():
+    determine_relationships(detail, resource_id, parent_child_map)
+
+# Layout calculations
 initial_x = 360
-initial_y = 540
-x_increment = 150
-y_increment = 100
-
-# Define x offsets for each resource type
-x_offsets = {
-    "Microsoft.Sql/servers/databases": 0,
-    "Microsoft.Web/sites": 200,
-    "Microsoft.Compute/disks": 400,
-    "Microsoft.Compute/virtualMachines": 600,
-    "Microsoft.Network/privateEndpoints": 800
-}
-
-# Initialize current positions
-current_x = initial_x
+initial_y = 100
+parent_spacing = 250
+child_spacing = 150
+vertical_spacing = 120
+# Starting Y position for the first resource group
 current_y = initial_y
 
-# Iterate over the objects in the JSON data again to create the nodes and edges
+# Create nodes and edges
 for subscription_id, resource_groups in data['Objects'].items():
     for resource_group, resources in resource_groups.items():
-        # Create a node for the resource group
+        # Create resource group node
+        rg_id = create_unique_id(f"sub-{subscription_id}-rg-{resource_group}", existing_ids)
         rg_node = ET.SubElement(root, 'mxCell', {
-            'id': f"sub-{subscription_id}-rg-{resource_group}",
+            'id': rg_id,
             'value': resource_group,
-            'style': "rounded=0;whiteSpace=wrap;html=1;",
+            'style': "rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;",
             'vertex': "1",
             'parent': "1"
         })
-        ET.SubElement(rg_node, 'mxGeometry', {'x': str(current_x), 'y': str(current_y), 'width': "120", 'height': "60", 'as': "geometry"})
+        ET.SubElement(rg_node, 'mxGeometry', {
+            'x': str(initial_x),
+            'y': str(current_y),
+            'width': "160",
+            'height': "60",
+            'as': "geometry"
+        })
 
-        # Update the current position for the next node
-        current_y += y_increment
+        # Identify parent nodes (nodes that have children or no relationships)
+        parent_nodes = []
+        child_nodes = set()
 
         for resource in resources:
             details = resource['Details']
             if isinstance(details, dict):
-                details = [details]  # Make it a list to unify the handling
+                details = [details]
 
-            for i, detail in enumerate(details):
-                # Check if 'id' exists in detail
+            for detail in details:
                 if 'id' not in detail:
-                    print(f"Warning: Missing 'id' in detail: {detail}")
-                    continue  # Skip this detail
-
-                # If the id is already in the set, skip this detail
-                if detail['id'] in unique_ids:
-                    print(f"Warning: Duplicate 'id' found: {detail['id']}")
                     continue
 
-                # Add the id to the set
-                unique_ids.add(detail['id'])
+                resource_id = detail['id']
+                is_child = False
+                for parent_id, children in parent_child_map.items():
+                    if resource_id in children:
+                        is_child = True
+                        child_nodes.add(resource_id)
+                        break
 
-                # Determine the x offset based on the resource type
-                resource_type = resource['ResourceType']
-                x_offset = x_offsets.get(resource_type, 0)
+                if not is_child:
+                    parent_nodes.append(detail)
 
-                # Create a node for each resource detail
-                resource_node = ET.SubElement(root, 'mxCell', {
-                    'id': f"resource-{detail['id']}",
-                    'value': detail['name'],
-                    'style': "rounded=0;whiteSpace=wrap;html=1;",
-                    'vertex': "1",
-                    'parent': "1"
-                })
-                ET.SubElement(resource_node, 'mxGeometry', {'x': str(current_x + x_offset), 'y': str(current_y), 'width': "120", 'height': "60", 'as': "geometry"})
+        # Position parent nodes below the resource group
+        parent_y = current_y + vertical_spacing
+        parent_x_start = initial_x - (len(parent_nodes) * parent_spacing) / 2
 
-                # Update the current position for the next node
-                current_y += y_increment
+        for i, parent in enumerate(parent_nodes):
+            parent_x = parent_x_start + (i * parent_spacing)
 
-                # Create an edge between the resource group and the resource
-                edge = ET.SubElement(root, 'mxCell', {
-                    'style': edge_style,
-                    'edge': "1",
-                    'parent': "1",
-                    'source': f"sub-{subscription_id}-rg-{resource_group}",
-                    'target': f"resource-{detail['id']}"
-                })
-                edge_geometry = ET.SubElement(edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
-                points = ET.SubElement(edge_geometry, 'Array', {'as': "points"})
-                ET.SubElement(points, 'mxPoint', {'x': "0", 'y': "0"})
+            # Create parent node
+            parent_node_id = create_unique_id(parent['id'], existing_ids)
+            parent_node = ET.SubElement(root, 'mxCell', {
+                'id': parent_node_id,
+                'value': parent['name'],
+                'style': "rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;",
+                'vertex': "1",
+                'parent': "1"
+            })
+            ET.SubElement(parent_node, 'mxGeometry', {
+                'x': str(parent_x),
+                'y': str(parent_y),
+                'width': "140",
+                'height': "60",
+                'as': "geometry"
+            })
 
-                # If the resource is a database, create an edge to its server
-                if detail['type'] == "Microsoft.Sql/servers/databases":
-                    server_id = '/'.join(detail['id'].split('/')[:-2])  # Extract the server id from the database id
-                    server_edge = ET.SubElement(root, 'mxCell', {
+            # Connect to resource group
+            edge_id = create_unique_id(f"edge-{parent_node_id}-{rg_id}", existing_ids)
+            edge = ET.SubElement(root, 'mxCell', {
+                'id': edge_id,
+                'style': edge_style,
+                'edge': "1",
+                'parent': "1",
+                'source': parent_node_id,
+                'target': rg_id
+            })
+            ET.SubElement(edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
+
+            # Position and create child nodes vertically below the parent
+            if parent['id'] in parent_child_map:
+                child_x = parent_x  # Align child nodes horizontally with the parent
+                children = parent_child_map[parent['id']]
+                child_y_start = parent_y + vertical_spacing  # Start just below the parent
+
+                for j, child_id in enumerate(children):
+                    if child_id not in all_resources:
+                        continue
+
+                    child = all_resources[child_id]
+                    child_y = child_y_start + (j * child_spacing)  # Position children vertically
+
+                    # Create child node
+                    child_node_id = create_unique_id(child_id, existing_ids)
+                    child_node = ET.SubElement(root, 'mxCell', {
+                        'id': child_node_id,
+                        'value': child['name'],
+                        'style': "rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;",
+                        'vertex': "1",
+                        'parent': "1"
+                    })
+                    ET.SubElement(child_node, 'mxGeometry', {
+                        'x': str(child_x),
+                        'y': str(child_y),
+                        'width': "120",
+                        'height': "60",
+                        'as': "geometry"
+                    })
+
+                    # Connect child to parent
+                    edge_id = create_unique_id(f"edge-{child_node_id}-{parent_node_id}", existing_ids)
+                    edge = ET.SubElement(root, 'mxCell', {
+                        'id': edge_id,
                         'style': edge_style,
                         'edge': "1",
                         'parent': "1",
-                        'source': f"resource-{server_id}",
-                        'target': f"resource-{detail['id']}"
+                        'source': child_node_id,
+                        'target': parent_node_id
                     })
-                    server_edge_geometry = ET.SubElement(server_edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
-                    server_points = ET.SubElement(server_edge_geometry, 'Array', {'as': "points"})
-                    ET.SubElement(server_points, 'mxPoint', {'x': "0", 'y': "0"})
+                    ET.SubElement(edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
 
-                # If the resource is a web app, create an edge to its app service plan
-                if resource['ResourceType'] == "Microsoft.Web/sites":
-                    # Add error handling for missing server_farm_id
-                    server_farm_id = detail.get('server_farm_id')
-                    if server_farm_id and server_farm_id in all_resources:
-                        edge = ET.SubElement(root, 'mxCell', {
-                            'style': edge_style,
-                            'edge': "1",
-                            'parent': "1",
-                            'source': f"resource-{detail['id']}",
-                            'target': f"resource-{server_farm_id}"
-                        })
-                        edge_geometry = ET.SubElement(edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
-                        points = ET.SubElement(edge_geometry, 'Array', {'as': "points"})
-                        ET.SubElement(points, 'mxPoint', {'x': "0", 'y': "0"})
-
-                # If the resource is a disk, create an edge to its VM
-                if resource['ResourceType'] == "Microsoft.Compute/disks":
-                    if 'managed_by' in detail:
-                        vm_id = detail['managed_by']
-                    else:
-                        vm_id = None  # or some default value
-                    if vm_id in all_resources:
-                        edge = ET.SubElement(root, 'mxCell', {
-                            'style': edge_style,
-                            'edge': "1",
-                            'parent': "1",
-                            'source': f"resource-{detail['id']}",
-                            'target': f"resource-{vm_id}"
-                        })
-                        edge_geometry = ET.SubElement(edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
-                        points = ET.SubElement(edge_geometry, 'Array', {'as': "points"})
-                        ET.SubElement(points, 'mxPoint', {'x': "0", 'y': "0"})
-
-                # If the resource is a VM, create an edge to its NIC
-                if resource['ResourceType'] == "Microsoft.Compute/virtualMachines":
-                    if 'network_profile' in detail and 'network_interfaces' in detail['network_profile']:
-                        nic_id = detail['network_profile']['network_interfaces'][0]['id']
-                        if nic_id in all_resources:
-                            edge = ET.SubElement(root, 'mxCell', {
-                                'style': edge_style,
-                                'edge': "1",
-                                'parent': "1",
-                                'source': f"resource-{detail['id']}",
-                                'target': f"resource-{nic_id}"
-                            })
-                            edge_geometry = ET.SubElement(edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
-                            points = ET.SubElement(edge_geometry, 'Array', {'as': "points"})
-                            ET.SubElement(points, 'mxPoint', {'x': "0", 'y': "0"})
-
-                    # Create an edge to each of its extensions
-                    if 'resources' in detail:
-                        for ext in detail['resources']:
-                            ext_id = ext['id']
-                            if ext_id in all_resources:
-                                edge = ET.SubElement(root, 'mxCell', {
-                                    'style': edge_style,
-                                    'edge': "1",
-                                    'parent': "1",
-                                    'source': f"resource-{detail['id']}",
-                                    'target': f"resource-{ext_id}"
-                                })
-                                edge_geometry = ET.SubElement(edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
-                                points = ET.SubElement(edge_geometry, 'Array', {'as': "points"})
-                                ET.SubElement(points, 'mxPoint', {'x': "0", 'y': "0"})
-
-                # If the resource is a Private Endpoint, create an edge to its NIC
-                if resource['ResourceType'] == "Microsoft.Network/privateEndpoints":
-                    if 'network_interfaces' in detail:
-                        for nic in detail['network_interfaces']:
-                            nic_id = nic['id']
-                            if nic_id in all_resources:
-                                edge = ET.SubElement(root, 'mxCell', {
-                                    'style': edge_style,
-                                    'edge': "1",
-                                    'parent': "1",
-                                    'source': f"resource-{detail['id']}",
-                                    'target': f"resource-{nic_id}"
-                                })
-                                edge_geometry = ET.SubElement(edge, 'mxGeometry', {'relative': "1", 'as': "geometry"})
-                                points = ET.SubElement(edge_geometry, 'Array', {'as': "points"})
-                                ET.SubElement(points, 'mxPoint', {'x': "0", 'y': "0"})
-                    if resource['ResourceType'] == "Microsoft.Compute/disks":
-                        if 'managed_by' in detail:
-                            vm_id = detail['managed_by']
+        max_children = max(len(parent_child_map.get(parent['id'], [])) for parent in parent_nodes) if parent_nodes else 0
+        current_y += vertical_spacing * 2 + max_children * child_spacing + vertical_spacing
 
 # Write the XML to a file
 tree = ET.ElementTree(mxfile)
