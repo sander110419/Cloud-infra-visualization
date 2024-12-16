@@ -10,6 +10,8 @@ from datetime import timedelta
 import subprocess
 from azure_func.resource_functions import *
 from json2docx import generate_word_document
+from azure_func.resource_functions import handle_advisor_recommendations
+
 
 #parse arguments
 args = parse_arguments()
@@ -63,7 +65,8 @@ def get_client_classes():
         'communication': azure_imports.CommunicationServiceManagementClient,
         'alertsmanagement': azure_imports.AlertsManagementClient,
         'datamigration': azure_imports.DataMigrationManagementClient,
-        'recovery_backup_items': azure_imports.RecoveryServicesBackupClient
+        'recovery_backup_items': azure_imports.RecoveryServicesBackupClient,
+        'advisor': azure_imports.AdvisorManagementClient
     }
     return client_classes
 
@@ -233,25 +236,35 @@ def process_resource(resource, rg, clients, resource_handlers, data, subscriptio
     processing_times.append(elapsed_time_resource)
     #logging.info(resource.type)
 
-    # Get the handler functions for this resource type
+       # Get the handler functions for this resource type
     logging.info(f"Processing resource {resource.name} of type {resource.type}")
     handler_infos = resource_handlers.get(resource.type)
+    resource_data = {}
     if handler_infos is not None:
         for handler_info in handler_infos:
             handler, client_key = handler_info
             client = clients[client_key]
             # Call the handler function and get the data
-            resource_data = handler(resource, rg, client)
-            if 'Error' in resource_data:
-                logging.warning(f"Error in {handler.__name__}: {resource_data['Error']}")
+            resource_details = handler(resource, rg, client)
+            if 'Error' in resource_details:
+                logging.warning(f"Error in {handler.__name__}: {resource_details['Error']}")
             else:
                 logging.info(f"Finished calling {handler.__name__} for resource {resource.name}")
+            resource_data['ResourceType'] = resource.type
+            resource_data['Details'] = resource_details
+    else:
+        # If no specific handler, just store the basic resource information
+        resource_data['ResourceType'] = resource.type
+        resource_data['Details'] = resource.as_dict()
 
-            data['Objects'][subscription][rg.name].append({
-                'ResourceType': resource.type,
-                'Details': resource_data
-            })
-    #update progress bar
+    # Fetch Azure Advisor recommendations
+    advisor_client = clients['advisor']
+    recommendations = handle_advisor_recommendations(resource.id, advisor_client)
+    resource_data['Recommendations'] = recommendations
+
+    data['Objects'][subscription][rg.name].append(resource_data)
+
+    # Update progress bar
     update_progress_bar(total_resources, rg, total_resourcegroups, processing_times)
 
 def update_progress_bar(total_resources, rg, total_resourcegroups, processing_times):

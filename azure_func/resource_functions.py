@@ -448,3 +448,16 @@ def handle_afd_endpoints(resource, rg, cdn_client):
 
     except Exception as e:
         return {'Error': str(e)}
+    
+def handle_advisor_recommendations(resource_id, advisor_client):
+    try:
+        # Construct the filter string to get recommendations for the specific resource
+        filter_str = f"ResourceId eq '{resource_id}'"
+        # Get the list of recommendations with the specified filter
+        recommendations = advisor_client.recommendations.list(filter=filter_str)
+        # Convert recommendations to a list of dictionaries
+        recommendations_list = [rec.as_dict() for rec in recommendations]
+        return recommendations_list
+    except Exception as e:
+        # Handle exceptions and return the error message
+        return [{'Error': str(e)}]
