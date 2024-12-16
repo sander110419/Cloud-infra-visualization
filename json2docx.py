@@ -55,38 +55,76 @@ def add_resource_group_table(doc, data):
     # Add 'Resource Groups' as a heading
     doc.add_heading('Resource Groups', level=1)
 
-    table = doc.add_table(rows=0, cols=1)
+    table = doc.add_table(rows=1, cols=2)
+    hdr_cells = table.rows[0].cells
+    hdr_cells[0].text = 'Subscription ID'
+    hdr_cells[1].text = 'Resource Group'
+
     resource_groups = set()
 
     for subscription_id in objects:
         for user_name, resources in objects[subscription_id].items():
             for resource in resources:
-                match = re.search(r'/resourceGroups/(.*?)/', resource['Details']['id'])
-                if match:
-                    resource_group = match.group(1)
-                    resource_groups.add(resource_group)
+                details = resource['Details']
+                if isinstance(details, dict):
+                    # If Details is a dict, proceed as before
+                    if 'id' in details:
+                        match = re.search(r'/resourceGroups/(.*?)/', details['id'])
+                        if match:
+                            resource_group = match.group(1)
+                            resource_groups.add((subscription_id, resource_group))
+                elif isinstance(details, list):
+                    # If Details is a list, iterate over each item
+                    for item in details:
+                        if 'id' in item:
+                            match = re.search(r'/resourceGroups/(.*?)/', item['id'])
+                            if match:
+                                resource_group = match.group(1)
+                                resource_groups.add((subscription_id, resource_group))
+                else:
+                    # Handle any other cases if necessary
+                    pass
 
-    for rg in resource_groups:
+    for subscription_id, rg in resource_groups:
         row_cells = table.add_row().cells
-        row_cells[0].text = rg
+        row_cells[0].text = subscription_id
+        row_cells[1].text = rg
 
         # Reduce paragraph spacing
-        for paragraph in row_cells[0].paragraphs:
-            paragraph.paragraph_format.space_after = Pt(0)
+        for cell in row_cells:
+            for paragraph in cell.paragraphs:
+                paragraph.paragraph_format.space_after = Pt(0)
 
     doc.add_paragraph('\n')
+
 
 def group_resources_by_resource_group(resources):
     resource_groups = {}
     for resource in resources:
-        match = re.search(r'/resourceGroups/(.*?)/', resource['Details']['id'])
-        if match:
-            resource_group = match.group(1)
-            if resource_group not in resource_groups:
-                resource_groups[resource_group] = []
-            resource_groups[resource_group].append(resource)
+        details = resource['Details']
+        if isinstance(details, dict):
+            # If Details is a dict
+            if 'id' in details:
+                match = re.search(r'/resourceGroups/(.*?)/', details['id'])
+                if match:
+                    resource_group = match.group(1)
+                    if resource_group not in resource_groups:
+                        resource_groups[resource_group] = []
+                    resource_groups[resource_group].append(resource)
+        elif isinstance(details, list):
+            # If Details is a list
+            for item in details:
+                if 'id' in item:
+                    match = re.search(r'/resourceGroups/(.*?)/', item['id'])
+                    if match:
+                        resource_group = match.group(1)
+                        if resource_group not in resource_groups:
+                            resource_groups[resource_group] = []
+                        resource_groups[resource_group].append(resource)
+        else:
+            # Handle any other cases if necessary
+            pass
     return resource_groups
-
 def sort_resources_by_type(resources):
     return sorted(resources, key=lambda x: x['ResourceType'])
 
@@ -98,10 +136,34 @@ def add_resource_table(doc, resource):
     if not resource['Details']:
         print(f"No details found for resource: {resource}")
         return
-
+    
+    details = resource['Details']
+    recommendations = resource.get('Recommendations', [])
+    
+    # Determine the resource name
+    if isinstance(details, dict):
+        resource_name = details.get('name', 'Unknown')
+    elif isinstance(details, list):
+        # If Details is a list, try to get the name from the first item
+        if details and 'name' in details[0]:
+            resource_name = details[0]['name']
+        else:
+            resource_name = 'Unknown'
+    else:
+        resource_name = 'Unknown'
+    
     resource_type = format_resource_type(resource['ResourceType'])
-    add_heading(doc, resource_type, resource['Details']['name'])
-    add_dict_as_table(doc, resource['Details'], 3)
+    add_heading(doc, resource_type, resource_name)
+
+    # Add resource details
+    add_dict_as_table(doc, details, 3)
+
+    # Add recommendations if available
+    if recommendations:
+        doc.add_heading('Recommendations', level=4)
+        for recommendation in recommendations:
+            add_dict_as_table(doc, recommendation, 4)
+
     doc.add_paragraph()
 
 def format_resource_type(resource_type):
@@ -112,19 +174,23 @@ def add_heading(doc, resource_type, resource_name, level=3):
     # Add resource type and name as a heading
     doc.add_heading(f"{resource_type} - {resource_name}", level)
 
-def add_dict_as_table(doc, value_dict, level):
-    table = doc.add_table(rows=0, cols=2)
-
-    # Set column widths: first column narrower than the second
-    set_column_widths_oxml(table, [3500, 250])  # Widths are in twentieths of a point, 2160 for ~1 inch and 7560 for ~3.5 inches
-
-    for attr, val in value_dict.items():
-        if isinstance(val, dict):  # Check if the attribute value is a dictionary
-            # Add this attribute as a separate table with 'attribute' as a header
-            doc.add_heading(format_attribute(attr), level+1)
-            add_dict_as_table(doc, val, level+1)
-        else:
-            add_row_to_table(table, attr, val)
+def add_dict_as_table(doc, value, level):
+    if isinstance(value, dict):
+        table = doc.add_table(rows=0, cols=2)
+        set_column_widths_oxml(table, [3500, 250])
+        for attr, val in value.items():
+            if isinstance(val, (dict, list)):
+                doc.add_heading(format_attribute(attr), level+1)
+                add_dict_as_table(doc, val, level+1)
+            else:
+                add_row_to_table(table, attr, val)
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            doc.add_heading(f"Item {index+1}", level+1)
+            add_dict_as_table(doc, item, level+1)
+    else:
+        # Handle other data types if necessary
+        pass
 
 def add_row_to_table(table, attr, val):
     row_cells = table.add_row().cells
