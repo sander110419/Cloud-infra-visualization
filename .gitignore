@@ -9,3 +9,4 @@ output/output.json
 output/output.docx
 error_log.txt
 output/output.html
+output/icons/*.svg

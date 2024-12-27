@@ -12,6 +12,7 @@ from azure_func.resource_functions import *
 from json2docx import generate_word_document
 from azure_func.resource_functions import handle_advisor_recommendations
 from json2mermaid import generate_mermaid_flowchart, generate_html
+import shutil
 
 
 #parse arguments
@@ -373,8 +374,19 @@ def generate_output():
     if args.output_mermaid:
         mermaid_code = generate_mermaid_flowchart(data)
         html_content = generate_html(mermaid_code)
+        
+        # Write the HTML file
         with open(os.path.join(output_folder, 'output.html'), 'w') as f:
             f.write(html_content)
+        
+        # Copy icons folder to output location
+        icons_source = os.path.join(os.path.dirname(__file__), 'icons')
+        icons_destination = os.path.join(output_folder, 'icons')
+        
+        if os.path.exists(icons_source):
+            if os.path.exists(icons_destination):
+                shutil.rmtree(icons_destination)
+            shutil.copytree(icons_source, icons_destination)
 
 if __name__ == "__main__":
     generate_output()
