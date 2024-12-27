@@ -37,6 +37,7 @@ def parse_arguments():
     parser.add_argument('--output_docx', action='store_true', help='Output to Docx')
     parser.add_argument('--output_folder', type=str, required=False, help='Output Folder')
     parser.add_argument('--output_drawio', action='store_true', help='Output to XML')
+    parser.add_argument('--output_mermaid', action='store_true', help='Output mermaid.js flowchart as HTML')
 
 
     return parser.parse_args()

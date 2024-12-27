@@ -11,6 +11,7 @@ import subprocess
 from azure_func.resource_functions import *
 from json2docx import generate_word_document
 from azure_func.resource_functions import handle_advisor_recommendations
+from json2mermaid import generate_mermaid_flowchart, generate_html
 
 
 #parse arguments
@@ -368,6 +369,12 @@ def generate_output():
     if args.output_docx:
         data = read_json(output_folder, output_json_file)  # Read the JSON data
         generate_word_document(data, output_folder)  # Generate the Word document
+
+    if args.output_mermaid:
+        mermaid_code = generate_mermaid_flowchart(data)
+        html_content = generate_html(mermaid_code)
+        with open(os.path.join(output_folder, 'output.html'), 'w') as f:
+            f.write(html_content)
 
 if __name__ == "__main__":
     generate_output()
