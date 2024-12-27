@@ -11,7 +11,7 @@ import subprocess
 from azure_func.resource_functions import *
 from json2docx import generate_word_document
 from azure_func.resource_functions import handle_advisor_recommendations
-from json2mermaid import generate_mermaid_flowchart, generate_html
+from json2html import generate_html
 import shutil
 
 
@@ -372,8 +372,7 @@ def generate_output():
         generate_word_document(data, output_folder)  # Generate the Word document
 
     if args.output_html:
-        mermaid_code = generate_mermaid_flowchart(data)
-        html_content = generate_html(mermaid_code)
+        html_content = generate_html(data)
         
         # Write the HTML file
         with open(os.path.join(output_folder, 'output.html'), 'w') as f:

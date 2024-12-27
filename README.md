@@ -24,7 +24,7 @@ We currently support MOST Azure resource types.
 - Iterates over all or selected resource groups and retrieves all resources.
 - Outputs an excel file with all technical configuration details of all resources.
 - Outputs a draw.io diagram which connects all resources to resource groups, DBs to servers, disks to VMs etc.
-- Outputs a mermaid.js (HTML) diagram which connects all resources to resource groups, DBs to servers, disks to VMs etc.
+- Outputs a cytoscape.js (HTML) diagram which connects all resources to resource groups, DBs to servers, disks to VMs etc.
 - Outputs a json file containing all the technical data to process in other tools.
 
 ## 🚀 How to Run
@@ -60,7 +60,7 @@ docker build -t cloud-infra-visualization .
 ```
 ```bash
 # Run the Docker container
-docker run -v /path/to/your/output_folder:/app/output cloud-infra-visualization --tenant_id "your_tenant_id" --client_id "your_client_id" --client_secret "your_client_secret" --subscription_id "your_subscription_id" --resource_group "your_resource_group" --output_folder "/path/to/your/output_folder" --output_xlsx --output_drawio --output_mermaid
+docker run -v /path/to/your/output_folder:/app/output cloud-infra-visualization --tenant_id "your_tenant_id" --client_id "your_client_id" --client_secret "your_client_secret" --subscription_id "your_subscription_id" --resource_group "your_resource_group" --output_folder "/path/to/your/output_folder" --output_xlsx --output_drawio --output_html
 ```
 Replace "/path/to/your/output_folder" with your actual output path.  
   
@@ -69,7 +69,7 @@ Replace "/path/to/your/output_folder" with your actual output path.
 To run directly from Docker hub:
 
 ```bash
-docker run -v /path/to/your/output_folder:/app/output sander110419/cloud-infra-visualization --tenant_id "your_tenant_id" --client_id "your_client_id" --client_secret "your_client_secret" --subscription_id "your_subscription_id" --resource_group "your_resource_group" --output_xlsx --output_drawio --output_mermaid
+docker run -v /path/to/your/output_folder:/app/output sander110419/cloud-infra-visualization --tenant_id "your_tenant_id" --client_id "your_client_id" --client_secret "your_client_secret" --subscription_id "your_subscription_id" --resource_group "your_resource_group" --output_xlsx --output_drawio --output_html
 ```
   
 Replace "/path/to/your/output_folder" with your actual output path.
@@ -118,7 +118,7 @@ Currently the aim is to fully support Azure, with any other providers in the fut
 Different types of visualizations will be supported. These include:
 
 - **Draw.io**: You will be able to export your infrastructure diagrams to Draw.io (XML) format.
-- **HTML**: You will be able to export your infrastructure diagrams to Mermaid.js (Markdown) format.
+- **HTML**: You will be able to export your infrastructure diagrams to cytoscape.js format.
 
 Soon:
 
