@@ -371,7 +371,7 @@ def generate_output():
         data = read_json(output_folder, output_json_file)  # Read the JSON data
         generate_word_document(data, output_folder)  # Generate the Word document
 
-    if args.output_mermaid:
+    if args.output_html:
         mermaid_code = generate_mermaid_flowchart(data)
         html_content = generate_html(mermaid_code)
         

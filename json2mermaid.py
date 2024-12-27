@@ -94,9 +94,11 @@ ICON_MAPPING = {
     'actiongroups': 'Detonation.svg',
     'alertRules': 'Alerts.svg',
     'activityLogAlerts': 'Alerts.svg',
-    'b2cDirectories': 'Azure-Active-Directory-B2C.svg',
-    'userAssignedIdentities': 'User-Assigned-Managed-Identities.svg',
-    'flexibleServers': 'SQL-Server.svg'
+    'b2cDirectories': 'Azure-AD-B2C.svg',
+    'userAssignedIdentities': 'Entra-Managed-Identities.svg',
+    'flexibleServers': 'SQL-Server.svg',
+    'Resource Group': 'Resource-Groups.svg',
+    'Subscriptions': 'Subscriptions.svg',
 }
 
 
@@ -113,14 +115,16 @@ def get_resource_name(details):
 
 def generate_mermaid_flowchart(data):
     mermaid_code = ["graph LR;"]  # Using Left to Right layout
+    sub_html = f'<img src="./icons/Subscriptions.svg" width="16"/><br>'
+    rg_html = f'<img src="./icons/Resource-Groups.svg" width="32"/><br>'
 
     for subscription_id, subscription_data in data['Objects'].items():
         sub_id = f"sub_{subscription_id.replace('-', '_').replace(' ', '_')}"
-        mermaid_code.append(f'{sub_id}["<b>Subscription:</b><br>{subscription_id}"]')
+        mermaid_code.append(f'{sub_id}["{sub_html}<b>Subscription:</b><br>{subscription_id}"]')
 
         for rg_name, resources in subscription_data.items():
             rg_id = f"rg_{rg_name.replace('-', '_').replace(' ', '_')}"
-            mermaid_code.append(f'{rg_id}["<b>Resource Group:</b><br>{rg_name}"]')
+            mermaid_code.append(f'{rg_id}["{rg_html}<b>Resource Group:</b><br>{rg_name}"]')
             mermaid_code.append(f"{sub_id} --> {rg_id}")
 
             for resource in resources:
@@ -137,7 +141,7 @@ def generate_mermaid_flowchart(data):
                 # Map resource type to icon
                 icon_filename = ICON_MAPPING.get(resource_type_key)
                 if icon_filename:
-                    icon_path = f'./icons/{icon_filename}'  # Adjust the path as necessary
+                    icon_path = f'./icons/{icon_filename}' 
                     icon_html = f'<img src="{icon_path}" width="48"/><br>'
                 else:
                     icon_html = ''
