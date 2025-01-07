@@ -193,6 +193,7 @@ def generate_html(mermaid_code):
         <script>
             mermaid.initialize({{
                 startOnLoad: true,
+                maxTextSize : 99999999,
                 securityLevel: 'loose',
                 theme: 'default',
                 flowchart: {{

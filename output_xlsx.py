@@ -71,7 +71,7 @@ def write_to_workbook(wb: Workbook, safe_resource_type: str, df_details, resourc
             break
     df_details = df_details.reindex(columns=resource_types[safe_resource_type])
     for row in dataframe_to_rows(df_details, index=False, header=False):
-        row = [str(cell) if isinstance(cell, list) else cell for cell in row]
+        row = [', '.join(map(str, cell)) if isinstance(cell, list) else str(cell) for cell in row]
         wb[safe_resource_type].append(row)
 
 def output_to_excel(data, output_folder):
@@ -112,6 +112,11 @@ def output_to_excel(data, output_folder):
                             rec['ResourceName'] = ''
 
                         rec['ResourceType'] = resource['ResourceType']
+
+                        # Handle the suppression_ids (convert list to string)
+                        if 'suppression_ids' in rec and isinstance(rec['suppression_ids'], list):
+                            rec['suppression_ids'] = ', '.join(map(str, rec['suppression_ids']))
+
                         recommendations_list.append(rec)
 
     # Add resource types to the Index sheet with hyperlinks

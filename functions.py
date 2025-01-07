@@ -18,12 +18,13 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Azure authentication parameters')
     parser.add_argument('--log_level', type=str, required=False, default='INFO', help='Log Level')
     parser.add_argument('--tenant_id', type=str, required=True, help='Tenant ID')
-    parser.add_argument('--client_id', type=str, required=True, help='Client ID')
+    parser.add_argument('--client_id', type=str, required=False, help='Client ID')
     parser.add_argument('--client_secret', type=str, required=False, help='Client Secret')
     parser.add_argument('--certificate_path', type=str, required=False, help='Path to the certificate file')
     parser.add_argument('--use_device_code', action='store_true', help='Use device code authentication')
     parser.add_argument('--interactive_login', action='store_true', help='Use interactive login')
-   
+    parser.add_argument('--user_login', action='store_true', help='Use Azure user account login')
+
     #filter args
     parser.add_argument('--subscription_id', type=str, required=False, help='Subscription ID')
     parser.add_argument('--resource_group', type=str, required=False, help='Resource Group')
@@ -66,12 +67,14 @@ def initialize_data():
 
     return data, start_time
 
-def authenticate_to_azure(tenant_id, client_id, client_secret=None, certificate_path=None, use_device_code=None, interactive_login=False):
+def authenticate_to_azure(tenant_id, client_id, client_secret=None, certificate_path=None, use_device_code=None, interactive_login=False, user_login=False):
     if interactive_login:
         credential = InteractiveBrowserCredential(client_id=client_id)
     elif use_device_code:
         # Use DeviceCodeCredential when use_device_code is True
         credential = azure_imports.DeviceCodeCredential(client_id=client_id, tenant_id=tenant_id)
+    elif user_login:
+        credential = InteractiveBrowserCredential()
     elif certificate_path:
         try:
             with open(certificate_path, "rb") as file:

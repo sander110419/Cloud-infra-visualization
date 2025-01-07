@@ -22,7 +22,7 @@ set_up_logging(args.log_level)
 #initialise data
 data, start_time = initialize_data()
 #authenticate to Azure
-credential, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, args.client_secret, args.certificate_path, args.use_device_code, args.interactive_login)
+credential, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, args.client_secret, args.certificate_path, args.use_device_code, args.interactive_login, args.user_login)
 #Get all subscriptions from erguments
 subscriptions = get_subscriptions(subscription_client, args.subscription_id)
 
