@@ -119,7 +119,7 @@ def output_to_excel(data, output_folder):
         index_sheet.append([resource_type])
         last_row = index_sheet.max_row
         cell = index_sheet.cell(row=last_row, column=1)
-        cell.hyperlink = f'#{resource_type}!A1'
+        cell.hyperlink = f"#'{resource_type}'!A1"
         cell.font = Font(color=Color('0563C1'), underline='single')
 
     # Create the Recommendations sheet if there are any recommendations
