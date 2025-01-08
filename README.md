@@ -39,7 +39,7 @@ The `--resource_group` flag is optional, the script will only iterate over that 
 The `--output_xlsx` flag is optional and will output an xlsx overview of all resources and types when added.  
 The `--output_folder` flag is optional, if this is omitted, it will write to an "output" folder in the current folder.  
 The `--output_drawio` flag is optional, when added this will output a drawio file with your visualization. 
-The `--output_mermaid` flag is optional, when added this will output a mermaid.js file with your visualization.
+The `--output_html` flag is optional, when added this will output a HTML file with your visualization.
 
 You can alternatively authenticate using your user account, interactively to an app registration, device code or with a client certificate.  
 `--use_device_code` Allows you to log in using a device code that will be generated  
@@ -49,7 +49,7 @@ You can alternatively authenticate using your user account, interactively to an 
 
 The full version with all features enabled would be:  
 ```python
-main.py --tenant_id TENANT_ID --client_id CLIENT_ID --client_secret CLIENT_SECRET --subscription_id SUBSCRIPTION_ID --resource_group RESOURCE_GROUP --output_folder PATH_TO_OUTPUT_FOLDER --output_xlsx --output_drawio
+main.py --tenant_id TENANT_ID --client_id CLIENT_ID --client_secret CLIENT_SECRET --subscription_id SUBSCRIPTION_ID --resource_group RESOURCE_GROUP --output_folder PATH_TO_OUTPUT_FOLDER --output_xlsx --output_drawio --output_docx --output_html
 ``` 
 
 To build and run the Docker container with the provided Dockerfile, follow these steps:
