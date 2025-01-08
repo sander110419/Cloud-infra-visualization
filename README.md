@@ -41,6 +41,12 @@ The `--output_folder` flag is optional, if this is omitted, it will write to an 
 The `--output_drawio` flag is optional, when added this will output a drawio file with your visualization. 
 The `--output_mermaid` flag is optional, when added this will output a mermaid.js file with your visualization.
 
+You can alternatively authenticate using your user account, interactively to an app registration, device code or with a client certificate.  
+`--use_device_code` Allows you to log in using a device code that will be generated  
+`--interactive_login` Allows you to log in using interactive login to a client that supports this.  
+`--user_login` Allows you to log in using your own microsoft account.  
+`--certificate_path` Allows you to set the path to your certificate to log in to the client app.  
+
 The full version with all features enabled would be:  
 ```python
 main.py --tenant_id TENANT_ID --client_id CLIENT_ID --client_secret CLIENT_SECRET --subscription_id SUBSCRIPTION_ID --resource_group RESOURCE_GROUP --output_folder PATH_TO_OUTPUT_FOLDER --output_xlsx --output_drawio
