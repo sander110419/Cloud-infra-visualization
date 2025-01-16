@@ -169,19 +169,18 @@ def output_to_excel(data, output_folder):
     # Save the workbook
     wb.save(f'{output_folder}/output.xlsx')
 
+def get_visio_shape_name(resource_type):
+    """Convert Azure resource type to a clean stencil shape name"""
+    # Remove Microsoft. prefix and replace / with _
+    shape_name = resource_type.replace('Microsoft.', '').replace('/', '_')
+    # Convert to lowercase for consistency
+    return shape_name.lower()
+
 def create_all_resources_sheet(wb: Workbook, resource_types):
-    # Create All Resources sheet
     all_resources = wb.create_sheet(title='All Resources')
-    
-    # Add index link at top
-    all_resources.insert_rows(0)
-    cell = all_resources.cell(row=1, column=1)
-    cell.value = "Index"
-    cell.hyperlink = "#Index!A1"
-    cell.font = Font(color=Color('0563C1'), underline='single')
-    
-    # Define only the columns we want
-    final_columns = ['subscription_id', 'resource_group', 'type', 'id', 'name']
+     
+    # Define columns including the VisioShape column
+    final_columns = ['subscription_id', 'resource_group', 'type', 'id', 'name', 'VisioShape']
     
     # Write header
     all_resources.append(final_columns)
@@ -190,12 +189,15 @@ def create_all_resources_sheet(wb: Workbook, resource_types):
     for sheet_name in wb.sheetnames:
         if sheet_name not in ['Index', 'All Resources', 'Recommendations']:
             sheet = wb[sheet_name]
-            headers = [cell.value for cell in sheet[2]]  # Get headers from row 2 (after Index link)
+            headers = [cell.value for cell in sheet[2]]
             
-            # Copy each row
-            for row in sheet.iter_rows(min_row=3):  # Start after headers
+            for row in sheet.iter_rows(min_row=3):
                 row_data = {headers[i]: cell.value for i, cell in enumerate(row)}
-                new_row = [row_data.get(col, '') for col in final_columns]
+                # Get the base data
+                new_row = [row_data.get(col, '') for col in final_columns[:-1]]
+                # Add the Visio shape name
+                visio_shape = get_visio_shape_name(row_data.get('type', ''))
+                new_row.append(visio_shape)
                 all_resources.append(new_row)
     
     # Add to index sheet
