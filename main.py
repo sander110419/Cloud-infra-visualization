@@ -181,12 +181,14 @@ def process_subscription(subscription, data, args, client_classes):
 
         # Get specific resource group
         if args.resource_group:
-            if args.subscription_id:
+            if args.resource_group:
                 try:
                     resource_groups = [resource_client.resource_groups.get(args.resource_group)]
+                    logging.info(f"Found resource group {args.resource_group} in subscription {subscription}")
                 except Exception as e:
-                    print(f"Resource group '{args.resource_group}' not found for subscription ID '{args.subscription_id}'")
-                    return
+                    logging.error(f"Resource group '{args.resource_group}' not found in subscription '{subscription}'")
+                    return False  # Return False to indicate failure
+                return True
             else:
                 try:
                     resource_groups = [resource_client.resource_groups.get(args.resource_group)]
@@ -284,7 +286,7 @@ def update_progress_bar(total_resources, rg, total_resourcegroups, processing_ti
 def authenticate(args):
     client_secret = None if args.use_device_code or args.certificate_path or args.interactive_login else args.client_secret
     certificate_path = None if args.use_device_code else args.certificate_path
-    _, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, client_secret, certificate_path, args.use_device_code, args.interactive_login)
+    _, subscription_client = authenticate_to_azure(args.tenant_id, args.client_id, client_secret, certificate_path, args.use_device_code, args.interactive_login, args.user_login)
     return subscription_client
 
 def create_directory(output_folder):
@@ -356,12 +358,8 @@ def generate_output():
 
     # Output to excel is requested
     if args.output_xlsx:
-        # Load your JSON data
         data = read_json(output_folder, output_json_file)
-        
-        # Write xlsx file
         write_excel(data, output_folder)
-
     # Output to drawio is requested
     if args.output_drawio:
         write_drawio(output_folder, output_json_file)
