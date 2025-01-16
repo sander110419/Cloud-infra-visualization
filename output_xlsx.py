@@ -9,9 +9,10 @@ def create_workbook():
     index_sheet.title = "Index"
     return wb, index_sheet
 
-def process_resource(resource):
+def process_resource(resource, rg_name):
     details = resource['Details']
     df_details = pd.json_normalize(details)
+    df_details['resource_group'] = rg_name
 
     # Process the 'type' field
     resource_type_df = df_details['type'].values[0] if 'type' in df_details.columns else ''
@@ -82,7 +83,7 @@ def output_to_excel(data, output_folder):
     for subscription, resource_groups in data['Objects'].items():
         for rg_name, resources in resource_groups.items():
             for resource in resources:
-                safe_resource_type, df_details = process_resource(resource)
+                safe_resource_type, df_details = process_resource(resource, rg_name)
                 safe_resource_type, resource_types = update_resource_types(safe_resource_type, df_details, resource_types)
                 write_to_workbook(wb, safe_resource_type, df_details, resource_types)
 
@@ -163,5 +164,44 @@ def output_to_excel(data, output_folder):
         cell.hyperlink = f'#Recommendations!A1'
         cell.font = Font(color=Color('0563C1'), underline='single')
 
+    create_all_resources_sheet(wb, resource_types)
+
     # Save the workbook
     wb.save(f'{output_folder}/output.xlsx')
+
+def create_all_resources_sheet(wb: Workbook, resource_types):
+    # Create All Resources sheet
+    all_resources = wb.create_sheet(title='All Resources')
+    
+    # Add index link at top
+    all_resources.insert_rows(0)
+    cell = all_resources.cell(row=1, column=1)
+    cell.value = "Index"
+    cell.hyperlink = "#Index!A1"
+    cell.font = Font(color=Color('0563C1'), underline='single')
+    
+    # Define only the columns we want
+    final_columns = ['subscription_id', 'resource_group', 'type', 'id', 'name']
+    
+    # Write header
+    all_resources.append(final_columns)
+    
+    # Copy data from each resource sheet
+    for sheet_name in wb.sheetnames:
+        if sheet_name not in ['Index', 'All Resources', 'Recommendations']:
+            sheet = wb[sheet_name]
+            headers = [cell.value for cell in sheet[2]]  # Get headers from row 2 (after Index link)
+            
+            # Copy each row
+            for row in sheet.iter_rows(min_row=3):  # Start after headers
+                row_data = {headers[i]: cell.value for i, cell in enumerate(row)}
+                new_row = [row_data.get(col, '') for col in final_columns]
+                all_resources.append(new_row)
+    
+    # Add to index sheet
+    index_sheet = wb['Index']
+    index_sheet.append(['All Resources'])
+    last_row = index_sheet.max_row
+    cell = index_sheet.cell(row=last_row, column=1)
+    cell.hyperlink = "#'All Resources'!A1"
+    cell.font = Font(color=Color('0563C1'), underline='single')
