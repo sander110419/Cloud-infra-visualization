@@ -10,33 +10,27 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.x'
+        python-version: '3.12'
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        if (Test-Path requirements.txt) { pip install -r requirements.txt }
+        pip install -r requirements-gui.txt
         pip install pyinstaller
 
-    - name: Generate add-data options
-      run: |
-        $rootFiles = Get-ChildItem .\ -Filter *.py | ForEach-Object { "--add-data ""$($_.Name):.""" }
-        $azureFuncFiles = Get-ChildItem .\azure_func -Filter *.py | ForEach-Object { "--add-data ""azure_func/$($_.Name):azure_func""" }
-        $allFiles = $rootFiles + $azureFuncFiles
-        $global:ADD_DATA_OPTIONS = $allFiles -join " "
-      shell: pwsh
-
+    # frontend.py imports main.py, so PyInstaller picks up all Python code by itself.
+    # The Azure icons are data files and have to be added explicitly.
     - name: Build EXE
-      run: pyinstaller --onefile frontend.py --noconsole --name Cloudinfraviz.exe $env:ADD_DATA_OPTIONS
+      run: pyinstaller --onefile frontend.py --noconsole --name Cloudinfraviz.exe --add-data "icons;icons"
       shell: pwsh
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: Cloudinfraviz.exe
         path: ./dist/Cloudinfraviz.exe
