@@ -1,0 +1,4 @@
+# Graphical front-end (frontend.py): everything the command line tool needs, plus Qt
+-r requirements.txt
+PyQt5>=5.15
+keyring>=24

@@ -1,21 +1,20 @@
-from PyQt5.QtWidgets import QApplication, QFileDialog, QScrollArea, QComboBox, QTextEdit, QWidget, QVBoxLayout, QPushButton, QDialog, QLineEdit, QFormLayout, QListWidgetItem, QListWidget, QCheckBox, QLabel, QMessageBox
-from PyQt5.QtCore import Qt, QProcess
-from functions import authenticate_to_azure, get_subscriptions
 import sys
+
+# The packaged executable has no separate Python to run main.py with, so it
+# starts itself with --run-cli to do the actual work (see prepare_args).
+if len(sys.argv) > 1 and sys.argv[1] == '--run-cli':
+    from main import generate_output
+    sys.exit(generate_output(sys.argv[2:]))
+
+from PyQt5.QtWidgets import QApplication, QFileDialog, QScrollArea, QComboBox, QTextEdit, QWidget, QVBoxLayout, QPushButton, QDialog, QLineEdit, QFormLayout, QListWidgetItem, QListWidget, QCheckBox, QLabel, QMessageBox
+from PyQt5.QtCore import Qt, QProcess, QProcessEnvironment
+from functions import authenticate_to_azure, get_subscriptions
 import os
 import subprocess
 import platform
 import keyring
 
 try:
-    def get_subscriptions(subscription_client, subscription_id):
-        if subscription_id:
-            subscriptions = [(subscription_id)]
-        else:
-            subscriptions = [(sub.subscription_id, sub.display_name) for sub in subscription_client.subscriptions.list()]
-
-        return subscriptions
-
     class AzureAuthApp(QWidget):
         def __init__(self):
             super().__init__()
@@ -23,9 +22,11 @@ try:
             self.tenant_id = None
             self.client_id = None
             self.client_secret = None
+            self.certificate_path = None
             self.subscriptions = []
-            self.selected_subscription_id = None
+            self.selected_subscription_ids = []
             self.current_identity = None
+            self.process = None
 
             self.initUI()
             screen = QApplication.desktop().screenGeometry()
@@ -279,15 +280,17 @@ try:
 
         def authenticate_and_load_subscriptions(self):
             try:
-                _, subscription_client = authenticate_to_azure(self.tenant_id, self.client_id, self.client_secret, self.certificate_path)
-                self.subscriptions = get_subscriptions(subscription_client, None)
+                _, arm_client = authenticate_to_azure(self.tenant_id, self.client_id, self.client_secret, self.certificate_path)
+                self.subscriptions = get_subscriptions(arm_client, None)
             except Exception as _:
                 QMessageBox.critical(self, "Invalid Credential selection", "The provided credentials are not valid.")
                 return
 
             self.listWidget.clear()
+            self.selected_subscription_ids = []
             for id, name in self.subscriptions:
                 item = QListWidgetItem(f"{name} ({id})")
+                item.setData(Qt.UserRole, id)
                 item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
                 item.setCheckState(Qt.Unchecked)
                 self.listWidget.addItem(item)
@@ -350,44 +353,58 @@ try:
                     self.comboBox.addItems(identities)  # And here
                 
         def on_item_changed(self, item):
-            if item.checkState() == Qt.Checked:
-                self.selected_subscription_id = item.text().split(' ')[-1].strip('()')
-                print(f"Selected subscription ID: {self.selected_subscription_id}")
-                for i in range(self.listWidget.count()):
-                    other_item = self.listWidget.item(i)
-                    if other_item != item:
-                        other_item.setCheckState(Qt.Unchecked)
+            # Any number of subscriptions can be ticked
+            self.selected_subscription_ids = [
+                self.listWidget.item(i).data(Qt.UserRole)
+                for i in range(self.listWidget.count())
+                if self.listWidget.item(i).checkState() == Qt.Checked
+            ]
 
         def run_main_py(self):
-            if self.selected_subscription_id and self.tenant_id and self.client_id and (self.client_secret or self.certificate_path):
-                self.setup_process()
-                args = self.prepare_args()
-                self.start_and_wait_for_process(args)
-                self.ask_to_open_output_folder()
+            if self.process is not None and self.process.state() != QProcess.NotRunning:
+                QMessageBox.information(self, "Already Running", "Document generation is still running.")
+                return
+            if not (self.tenant_id and self.client_id and (self.client_secret or self.certificate_path)):
+                QMessageBox.information(self, "No Identity", "Please load or create an identity first.")
+                return
+            if not self.selected_subscription_ids:
+                QMessageBox.information(self, "No Subscription", "Please tick at least one subscription.")
+                return
+            self.setup_process()
+            self.runButton.setEnabled(False)
+            self.outputTextEdit.clear()
+            self.start_process(self.prepare_args())
 
         def setup_process(self):
             self.process = QProcess()
             self.process.readyReadStandardOutput.connect(self.read_output)
+            self.process.readyReadStandardError.connect(self.read_output)
             self.process.errorOccurred.connect(self.handle_error)
+            self.process.finished.connect(self.on_process_finished)
+            # The secret travels in the environment: command lines are visible to other processes
+            environment = QProcessEnvironment.systemEnvironment()
+            if self.client_secret and not self.certificate_path:
+                environment.insert('AZURE_CLIENT_SECRET', self.client_secret)
+            self.process.setProcessEnvironment(environment)
 
         def prepare_args(self):
-            # Get the directory of the current script (or executable)
-            dir_path = os.path.dirname(os.path.abspath(__file__))
-            # Prepare the arguments for main.py
-            args = [os.path.join(dir_path, 'main.py'), 
-                    '--subscription_id', self.selected_subscription_id,
-                    '--tenant_id', self.tenant_id,
-                    '--client_id', self.client_id]
+            if getattr(sys, 'frozen', False):
+                # Packaged executable: run ourselves in command line mode
+                args = ['--run-cli']
+            else:
+                dir_path = os.path.dirname(os.path.abspath(__file__))
+                args = ['-u', os.path.join(dir_path, 'main.py')]
+            args += ['--subscription_id', ','.join(self.selected_subscription_ids),
+                     '--tenant_id', self.tenant_id,
+                     '--client_id', self.client_id]
             self.add_advanced_options(args)
             return args
 
         def add_advanced_options(self, args):
             # Add the advanced options to the arguments if they are not empty
             if self.certificate_path:  # Check if a certificate path is available
-                print(self.certificate_path)
                 args.extend(['--certificate_path', self.certificate_path])
-            elif self.client_secret:  # Otherwise, check if a client secret is available
-                args.extend(['--client_secret', self.client_secret])
+            # A client secret is passed through the environment, see setup_process
             self.extend_args_if_text(args, '--resource_group', self.resourceGroupNameInput)
             self.extend_args_if_text(args, '--rgtag_key', self.resourceGroupTagKeyInput)
             self.extend_args_if_text(args, '--rgtag_value', self.resourceGroupTagValueInput)
@@ -401,13 +418,20 @@ try:
             if self.outputDocxCheckbox.isChecked():
                 args.append('--output_docx')
             if self.outputHtmlCheckbox.isChecked():
-                args.append('--output_mermaid')
+                args.append('--output_html')
 
-        def start_and_wait_for_process(self, args):
-            # Start the process with the prepared arguments
-            self.process.start(sys.executable, ['-u'] + args)
-            # Wait for the process to finish
-            self.process.waitForFinished()
+        def start_process(self, args):
+            # Runs in the background; on_process_finished is called when it is done
+            self.process.start(sys.executable, args)
+
+        def on_process_finished(self, exit_code, _exit_status):
+            self.read_output()
+            self.runButton.setEnabled(True)
+            if exit_code == 0:
+                self.outputTextEdit.append("Done.")
+                self.ask_to_open_output_folder()
+            else:
+                self.outputTextEdit.append(f"Finished with errors (exit code {exit_code}). See CloudInfraViz.log.")
 
         def ask_to_open_output_folder(self):
             # Ask the user if they want to open the output folder
@@ -428,13 +452,13 @@ try:
                 args.extend([arg_name, input_field.text()])
 
         def read_output(self):
-            output = bytes(self.process.readAllStandardOutput()).decode()
-            error = bytes(self.process.readAllStandardError()).decode()
+            output = bytes(self.process.readAllStandardOutput()).decode(errors='replace')
+            error = bytes(self.process.readAllStandardError()).decode(errors='replace')
 
-            if output:
-                self.outputTextEdit.append(output)
-            if error:
-                self.outputTextEdit.append(error)
+            if output.strip():
+                self.outputTextEdit.append(output.rstrip())
+            if error.strip():
+                self.outputTextEdit.append(error.rstrip())
 
         def showDialog(self):
             dialog = QDialog()
@@ -462,15 +486,17 @@ try:
 
         def load_subscriptions(self):
             try:
-                _, subscription_client = authenticate_to_azure(self.tenant_id, self.client_id, self.client_secret, self.certificate_path)
-                self.subscriptions = get_subscriptions(subscription_client, None)
+                _, arm_client = authenticate_to_azure(self.tenant_id, self.client_id, self.client_secret, self.certificate_path)
+                self.subscriptions = get_subscriptions(arm_client, None)
             except Exception as _:
                 QMessageBox.critical(self, "Invalid Credentials", "The provided credentials are invalid.")
                 return
 
             self.listWidget.clear()
+            self.selected_subscription_ids = []
             for id, name in self.subscriptions:
                 item = QListWidgetItem(f"{name} ({id})")
+                item.setData(Qt.UserRole, id)
                 item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
                 item.setCheckState(Qt.Unchecked)
                 self.listWidget.addItem(item)
@@ -489,8 +515,8 @@ try:
             self.client_id = client_id
 
             try:
-                _, subscription_client = authenticate_to_azure(tenant_id, client_id, self.client_secret, self.certificate_path)
-                self.subscriptions = get_subscriptions(subscription_client, None)
+                _, arm_client = authenticate_to_azure(tenant_id, client_id, self.client_secret, self.certificate_path)
+                self.subscriptions = get_subscriptions(arm_client, None)
 
                 # Check if the identity name is already in use
                 identities = keyring.get_password("Azure", "identities")

@@ -13,3 +13,8 @@ example output/*
 LICENSE
 README.md
 CONTRIBUTING.md
+tests
+.pytest_cache
+output
+requirements-gui.txt
+requirements-dev.txt
