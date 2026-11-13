@@ -1,209 +1,180 @@
+import json
+import os
+import re
+
 import pandas as pd
 from openpyxl import Workbook
-from openpyxl.utils.dataframe import dataframe_to_rows
-from openpyxl.styles import Font, Color
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
+from openpyxl.styles import Color, Font
+from openpyxl.utils import get_column_letter
 
-def create_workbook():
-    wb = Workbook()
-    index_sheet = wb.active
-    index_sheet.title = "Index"
-    return wb, index_sheet
+from azure_func.inventory import iter_details
 
-def process_resource(resource, rg_name):
-    details = resource['Details']
-    df_details = pd.json_normalize(details)
-    df_details['resource_group'] = rg_name
+LINK_FONT = Font(color=Color('0563C1'), underline='single')
+HEADER_FONT = Font(bold=True)
+FIXED_COLUMNS = ['subscription_id', 'resource_group', 'type', 'id', 'name']
+MAX_CELL_LENGTH = 32000  # Excel allows 32767 characters in a cell
+RESERVED_SHEETS = ('Index', 'All Resources', 'Recommendations')
 
-    # Process the 'type' field
-    resource_type_df = df_details['type'].values[0] if 'type' in df_details.columns else ''
-    safe_resource_type_df = resource_type_df.replace('Microsoft.', '').replace('/', '_').lower()
 
-    # Fall back to using ResourceType if type field is empty
-    if not safe_resource_type_df:
-        resource_type = resource['ResourceType']
-        safe_resource_type = resource_type.replace('Microsoft.', '').replace('/', '_').lower()
-    else:
-        safe_resource_type = safe_resource_type_df
+def sheet_title(resource_type, used):
+    """Human friendly, valid and unique sheet name for a resource type.
 
-    # Convert the resource type name to a human-friendly format
-    parts = safe_resource_type.split('_')
+    'Microsoft.Compute/virtualMachines' -> 'Compute - Virtualmachines'
+    """
+    parts = resource_type.replace('Microsoft.', '').replace('microsoft.', '').replace('/', '_').lower().split('_')
     if len(parts) > 1:
-        service_name = parts[0].capitalize()
-        resource_type_name = " ".join([part.capitalize() for part in parts[1:]])
-        safe_resource_type = f"{service_name} - {resource_type_name}"
+        title = f"{parts[0].capitalize()} - {' '.join(part.capitalize() for part in parts[1:])}"
+    else:
+        title = parts[0].capitalize() or 'Unknown'
+    title = re.sub(r"[\[\]:*?/\\']", ' ', title)[:31].strip() or 'Unknown'
+    candidate, counter = title, 2
+    while candidate.lower() in used:  # Excel sheet names are limited to 31 characters and case-insensitive
+        suffix = f"~{counter}"
+        candidate = title[:31 - len(suffix)] + suffix
+        counter += 1
+    used.add(candidate.lower())
+    return candidate
 
-    fixed_columns_order = ['type', 'id', 'name']
-    for column in fixed_columns_order:
-        if column not in df_details.columns:
-            df_details[column] = ''
 
-    # Extract subscription id from 'id' column and add it as a new column
-    if 'id' in df_details.columns:
-        df_details['subscription_id'] = df_details['id'].apply(lambda x: x.split('/')[2] if isinstance(x, str) and len(x.split('/')) > 2 else '')
+def cell_value(value):
+    """Convert a value to something Excel can store."""
+    if value is None:
+        return None
+    if isinstance(value, float) and pd.isna(value):
+        return None
+    if isinstance(value, (list, dict)):
+        if not value:
+            return None
+        if isinstance(value, list) and all(isinstance(item, (str, int, float)) for item in value):
+            value = ', '.join(map(str, value))
+        else:
+            value = json.dumps(value, default=str)
+    if isinstance(value, str):
+        return ILLEGAL_CHARACTERS_RE.sub('', value)[:MAX_CELL_LENGTH]
+    if isinstance(value, (bool, int, float)):
+        return value
+    return str(value)[:MAX_CELL_LENGTH]
 
-    # Make 'subscription_id' the first column
-    cols = list(df_details.columns)
-    cols.insert(0, cols.pop(cols.index('subscription_id')))
-    df_details = df_details.loc[:, cols]
-
-    return safe_resource_type, df_details
-
-def update_resource_types(safe_resource_type, df_details, resource_types):
-    if len(safe_resource_type) > 31:
-        safe_resource_type = safe_resource_type[:31]
-    if safe_resource_type not in resource_types:
-        other_columns = [col for col in df_details.columns.tolist() if col not in ['type', 'id', 'name', 'subscription_id'] and not col.startswith('tag.')]
-        tag_columns = [col for col in df_details.columns.tolist() if col.startswith('tag.')]
-        sorted_columns = ['subscription_id', 'type', 'id', 'name'] + sorted(other_columns) + sorted(tag_columns)
-        resource_types[safe_resource_type] = sorted_columns
-    return safe_resource_type, resource_types
-
-def write_to_workbook(wb: Workbook, safe_resource_type: str, df_details, resource_types):
-    if safe_resource_type not in wb.sheetnames:
-        wb.create_sheet(title=safe_resource_type)
-        wb[safe_resource_type].insert_rows(0)
-        # Add a link to the index sheet at the top of the current sheet
-        cell = wb[safe_resource_type].cell(row=1, column=1)
-        cell.value = "Index"
-        cell.hyperlink = "#Index!A1"
-        cell.font = Font(color=Color('0563C1'), underline='single')
-        for row in dataframe_to_rows(df_details[resource_types[safe_resource_type]], index=False, header=True):
-            wb[safe_resource_type].append(row)
-            break
-    df_details = df_details.reindex(columns=resource_types[safe_resource_type])
-    for row in dataframe_to_rows(df_details, index=False, header=False):
-        row = [', '.join(map(str, cell)) if isinstance(cell, list) else str(cell) for cell in row]
-        wb[safe_resource_type].append(row)
-
-def output_to_excel(data, output_folder):
-    wb, index_sheet = create_workbook()
-    resource_types = {}
-    recommendations_list = []  # List to collect all recommendations
-
-    for subscription, resource_groups in data['Objects'].items():
-        for rg_name, resources in resource_groups.items():
-            for resource in resources:
-                safe_resource_type, df_details = process_resource(resource, rg_name)
-                safe_resource_type, resource_types = update_resource_types(safe_resource_type, df_details, resource_types)
-                write_to_workbook(wb, safe_resource_type, df_details, resource_types)
-
-                # Collect recommendations
-                if 'Recommendations' in resource and resource['Recommendations']:
-                    for recommendation in resource['Recommendations']:
-                        # Add resource context to the recommendation
-                        rec = recommendation.copy()
-                        rec['SubscriptionId'] = subscription
-                        rec['ResourceGroupName'] = rg_name
-                        details = resource['Details']
-
-                        # Handle case where 'Details' can be a dict or a list
-                        if isinstance(details, dict):
-                            rec['ResourceId'] = details.get('id', '')
-                            rec['ResourceName'] = details.get('name', '')
-                        elif isinstance(details, list):
-                            # Use the first item if it's a dict
-                            if len(details) > 0 and isinstance(details[0], dict):
-                                rec['ResourceId'] = details[0].get('id', '')
-                                rec['ResourceName'] = details[0].get('name', '')
-                            else:
-                                rec['ResourceId'] = ''
-                                rec['ResourceName'] = ''
-                        else:
-                            rec['ResourceId'] = ''
-                            rec['ResourceName'] = ''
-
-                        rec['ResourceType'] = resource['ResourceType']
-
-                        # Handle the suppression_ids (convert list to string)
-                        if 'suppression_ids' in rec and isinstance(rec['suppression_ids'], list):
-                            rec['suppression_ids'] = ', '.join(map(str, rec['suppression_ids']))
-
-                        recommendations_list.append(rec)
-
-    # Add resource types to the Index sheet with hyperlinks
-    for resource_type in resource_types:
-        index_sheet.append([resource_type])
-        last_row = index_sheet.max_row
-        cell = index_sheet.cell(row=last_row, column=1)
-        cell.hyperlink = f"#'{resource_type}'!A1"
-        cell.font = Font(color=Color('0563C1'), underline='single')
-
-    # Create the Recommendations sheet if there are any recommendations
-    if recommendations_list:
-        # Create a DataFrame from the recommendations list
-        recommendations_df = pd.json_normalize(recommendations_list)
-
-        # Rearrange columns to bring important ones to the front
-        cols_to_front = ['SubscriptionId', 'ResourceGroupName', 'ResourceId', 'ResourceName', 'ResourceType']
-        other_columns = [col for col in recommendations_df.columns if col not in cols_to_front]
-        recommendations_df = recommendations_df[cols_to_front + other_columns]
-
-        # Create the Recommendations sheet
-        wb.create_sheet(title='Recommendations')
-        ws = wb['Recommendations']
-        # Add a link to the index sheet at the top of the current sheet
-        ws.insert_rows(0)
-        cell = ws.cell(row=1, column=1)
-        cell.value = "Index"
-        cell.hyperlink = "#Index!A1"
-        cell.font = Font(color=Color('0563C1'), underline='single')
-
-        # Write the DataFrame to the sheet
-        for r in dataframe_to_rows(recommendations_df, index=False, header=True):
-            ws.append(r)
-
-        # Adjust column widths
-        for column_cells in ws.columns:
-            length = max(len(str(cell.value)) for cell in column_cells)
-            ws.column_dimensions[column_cells[0].column_letter].width = length + 2
-
-        # Add the Recommendations sheet to the index
-        index_sheet.append(['Recommendations'])
-        last_row = index_sheet.max_row
-        cell = index_sheet.cell(row=last_row, column=1)
-        cell.hyperlink = f'#Recommendations!A1'
-        cell.font = Font(color=Color('0563C1'), underline='single')
-
-    create_all_resources_sheet(wb, resource_types)
-
-    # Save the workbook
-    wb.save(f'{output_folder}/output.xlsx')
 
 def get_visio_shape_name(resource_type):
     """Convert Azure resource type to a clean stencil shape name"""
-    # Remove Microsoft. prefix and replace / with _
-    shape_name = resource_type.replace('Microsoft.', '').replace('/', '_')
-    # Convert to lowercase for consistency
-    return shape_name.lower()
+    return (resource_type or '').replace('Microsoft.', '').replace('/', '_').lower()
 
-def create_all_resources_sheet(wb: Workbook, resource_types):
-    all_resources = wb.create_sheet(title='All Resources')
-     
-    # Define columns including the VisioShape column
-    final_columns = ['subscription_id', 'resource_group', 'type', 'id', 'name', 'VisioShape']
-    
-    # Write header
-    all_resources.append(final_columns)
-    
-    # Copy data from each resource sheet
-    for sheet_name in wb.sheetnames:
-        if sheet_name not in ['Index', 'All Resources', 'Recommendations']:
-            sheet = wb[sheet_name]
-            headers = [cell.value for cell in sheet[2]]
-            
-            for row in sheet.iter_rows(min_row=3):
-                row_data = {headers[i]: cell.value for i, cell in enumerate(row)}
-                # Get the base data
-                new_row = [row_data.get(col, '') for col in final_columns[:-1]]
-                # Add the Visio shape name
-                visio_shape = get_visio_shape_name(row_data.get('type', ''))
-                new_row.append(visio_shape)
-                all_resources.append(new_row)
-    
-    # Add to index sheet
-    index_sheet = wb['Index']
-    index_sheet.append(['All Resources'])
-    last_row = index_sheet.max_row
-    cell = index_sheet.cell(row=last_row, column=1)
-    cell.hyperlink = "#'All Resources'!A1"
-    cell.font = Font(color=Color('0563C1'), underline='single')
+
+def add_index_link(ws):
+    cell = ws.cell(row=1, column=1)
+    cell.value = "Index"
+    cell.hyperlink = "#Index!A1"
+    cell.font = LINK_FONT
+
+
+def write_table(ws, columns, rows, index_link=True):
+    """Write a header and data rows, optionally below a link back to the Index sheet."""
+    if index_link:
+        add_index_link(ws)
+    ws.append(columns)
+    header_row = ws.max_row
+    for cell in ws[header_row]:
+        cell.font = HEADER_FONT
+    for row in rows:
+        ws.append([cell_value(value) for value in row])
+    ws.freeze_panes = f'A{header_row + 1}'
+    if columns:
+        ws.auto_filter.ref = f"A{header_row}:{get_column_letter(len(columns))}{max(ws.max_row, header_row)}"
+    for index, column in enumerate(columns, start=1):
+        ws.column_dimensions[get_column_letter(index)].width = min(max(len(str(column)) + 2, 12), 60)
+
+
+def group_by_type(data):
+    """resource type -> list of flat rows (dicts)."""
+    by_type = {}
+    for subscription_id, rg_name, entry, detail in iter_details(data):
+        resource_type = detail.get('type') or entry.get('ResourceType') or 'Unknown'
+        row = {'subscription_id': subscription_id, 'resource_group': rg_name, **detail}
+        row['type'] = resource_type
+        by_type.setdefault(resource_type, []).append(row)
+    return by_type
+
+
+def order_columns(columns):
+    other = sorted(col for col in columns if col not in FIXED_COLUMNS and not col.startswith('tags.'))
+    tags = sorted(col for col in columns if col.startswith('tags.'))
+    return FIXED_COLUMNS + other + tags
+
+
+def collect_recommendations(data):
+    rows = []
+    for subscription_id, rg_name, entry, detail in iter_details(data):
+        for recommendation in entry.get('Recommendations') or []:
+            if not isinstance(recommendation, dict) or 'Error' in recommendation:
+                continue
+            rows.append({
+                **recommendation,
+                'SubscriptionId': subscription_id,
+                'ResourceGroupName': rg_name,
+                'ResourceId': detail.get('id', ''),
+                'ResourceName': detail.get('name', ''),
+                'ResourceType': entry.get('ResourceType') or detail.get('type', ''),
+            })
+    for subscription_id, info in (data.get('Subscriptions') or {}).items():
+        for recommendation in info.get('Recommendations') or []:
+            rows.append({
+                **recommendation,
+                'SubscriptionId': subscription_id,
+                'ResourceGroupName': '',
+                'ResourceId': f'/subscriptions/{subscription_id}',
+                'ResourceName': info.get('displayName', subscription_id),
+                'ResourceType': 'Microsoft.Resources/subscriptions',
+            })
+    return rows
+
+
+def output_to_excel(data, output_folder):
+    wb = Workbook()
+    index_sheet = wb.active
+    index_sheet.title = "Index"
+    index_sheet.append(['Sheet', 'Resource type', 'Count'])
+    for cell in index_sheet[1]:
+        cell.font = HEADER_FONT
+
+    def add_to_index(title, resource_type='', count=None):
+        index_sheet.append([title, resource_type, count])
+        cell = index_sheet.cell(row=index_sheet.max_row, column=1)
+        cell.hyperlink = f"#'{title}'!A1"
+        cell.font = LINK_FONT
+
+    used_titles = {name.lower() for name in RESERVED_SHEETS}
+    all_rows = []
+    by_type = group_by_type(data)
+    for resource_type in sorted(by_type, key=str.lower):
+        rows = by_type[resource_type]
+        # One table per type; the columns are the union over all resources of that type.
+        frame = pd.json_normalize(rows)
+        columns = order_columns(list(frame.columns))
+        frame = frame.reindex(columns=columns).astype(object)
+        title = sheet_title(resource_type, used_titles)
+        write_table(wb.create_sheet(title=title), columns, frame.itertuples(index=False, name=None))
+        add_to_index(title, resource_type, len(rows))
+        for row in rows:
+            all_rows.append([row.get('subscription_id'), row.get('resource_group'), resource_type, row.get('id'),
+                             row.get('name'), get_visio_shape_name(resource_type)])
+
+    recommendations = collect_recommendations(data)
+    if recommendations:
+        frame = pd.json_normalize(recommendations)
+        front = ['SubscriptionId', 'ResourceGroupName', 'ResourceId', 'ResourceName', 'ResourceType']
+        columns = front + [col for col in frame.columns if col not in front]
+        frame = frame.reindex(columns=columns).astype(object)
+        write_table(wb.create_sheet(title='Recommendations'), columns, frame.itertuples(index=False, name=None))
+        add_to_index('Recommendations', '', len(recommendations))
+
+    # Flat list of everything, including the shape name used for Visio data linking.
+    # A plain table with the header in row 1, so Visio can import it as is.
+    write_table(wb.create_sheet(title='All Resources'), FIXED_COLUMNS + ['VisioShape'], all_rows, index_link=False)
+    add_to_index('All Resources', '', len(all_rows))
+
+    index_sheet.column_dimensions['A'].width = 34
+    index_sheet.column_dimensions['B'].width = 70
+    index_sheet.freeze_panes = 'A2'
+    wb.save(os.path.join(output_folder, 'output.xlsx'))

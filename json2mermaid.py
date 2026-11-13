@@ -1,156 +1,54 @@
-import os
+from urllib.parse import quote
 
-ICON_MAPPING = {
-    'virtualMachines': 'Virtual-Machine.svg',
-    'networkInterfaces': 'Network-Interfaces.svg',
-    'storageAccounts': 'Storage-Accounts.svg',
-    'virtualNetworks': 'Virtual-Networks.svg',
-    'publicIPAddresses': 'Public-IP-Addresses.svg',
-    'networkSecurityGroups': 'Network-Security-Groups.svg',
-    'loadBalancers': 'Load-Balancers.svg',
-    'disks': 'Disks.svg',
-    'snapshots': 'Disks-Snapshots.svg',
-    'cosmosDB': 'Azure-Cosmos-DB.svg',
-    'sqlServers': 'SQL-Server.svg',
-    'sqlDatabases': 'SQL-Database.svg',
-    'vaults': 'Key-Vaults.svg',
-    'appServicePlans': 'App-Service-Plans.svg',
-    'webSites': 'App-Services.svg',
-    'functionApps': 'Function-Apps.svg',
-    'apiManagementServices': 'API-Management-Services.svg',
-    'dataLakeStores': 'Data-Lake-Store-Gen1.svg',
-    'dataFactories': 'Data-Factories.svg',
-    'streamingJobs': 'Stream-Analytics-Jobs.svg',
-    'managedClusters': 'Kubernetes-Services.svg',
-    'searchServices': 'Search.svg',
-    'signalR': 'SignalR.svg',
-    'botServices': 'Bot-Services.svg',
-    'iotHubs': 'IoT-Hub.svg',
-    'cognitiveServices': 'Cognitive-Services.svg',
-    'cdns': 'CDN-Profiles.svg',
-    'serviceFabricClusters': 'Service-Fabric-Clusters.svg',
-    'schedules': 'Scheduler.svg',
-    'actionGroups': 'Action-Groups.svg',
-    'jobCollections': 'Scheduler-Job-Collections.svg',
-    'databaseAccounts': 'Azure-Cosmos-DB.svg',
-    'eventSubscriptions': 'Event-Grid-Subscriptions.svg',
-    'eventGridTopics': 'Event-Grid-Topics.svg',
-    'recoveryServicesVaults': 'Recovery-Services-Vaults.svg',
-    'privateEndpoints': 'Private-Endpoints.svg',
-    'proximityPlacementGroups': 'Proximity-Placement-Groups.svg',
-    'containerApps': 'Container-Apps-Environments.svg',
-    'eventHubNamespaces': 'Event-Hubs.svg',
-    'eventHubs': 'Event-Hubs.svg',
-    'workflows': 'Logic-Apps.svg',
-    'containerRegistries': 'Container-Registries.svg',
-    'serviceBusNamespaces': 'Azure-Service-Bus.svg',
-    'containerGroups': 'Container-Instances.svg',
-    'storageSyncServices': 'Storage-Sync-Services.svg',
-    'communicationServices': 'Azure-Communication-Services.svg',
-    'restorePointCollections': 'Restore-Points-Collections.svg',
-    'routeTables': 'Route-Tables.svg',
-    'actionRules': 'Action-Groups.svg',
-    'alerts': 'Alerts.svg',
-    'metricAlerts': 'Alerts.svg',
-    'scheduledQueryRules': 'Log-Analytics-Query-Pack.svg',
-    'applicationGatewayWAFPolicies': 'Web-Application-Firewall-Policies(WAF).svg',
-    'afdProfiles': 'Front-Door-and-CDN-Profiles.svg',
-    'frontDoors': 'Front-Door-and-CDN-Profiles.svg',
-    'afdEndpoints': 'Front-Door-and-CDN-Profiles.svg',
-    'eventGridDomains': 'Event-Grid-Domains.svg',
-    'serviceBusQueues': 'Azure-Service-Bus.svg',
-    'serviceBusTopics': 'Azure-Service-Bus.svg',
-    'managementLocks': 'Management-Groups.svg',
-    'sqlManagedInstances': 'SQL-Managed-Instance.svg',
-    'sqlManagedDatabases': 'SQL-Database.svg',
-    'privateLinkServices': 'Private-Link-Services.svg',
-    'integrationAccounts': 'Integration-Accounts.svg',
-    'virtualClusters': 'Virtual-Clusters.svg',
-    'serviceEndpointPolicies': 'Service-Endpoint-Policies.svg',
-    'imageGalleries': 'Shared-Image-Galleries.svg',
-    'galleryImages': 'Images.svg',
-    'galleryImageVersions': 'VM-Image-Version.svg',
-    'vmImages': 'VM-Images-(Classic).svg',
-    'webCertificates': 'App-Service-Certificates.svg',
-    'webConnections': 'Connections.svg',
-    'smartDetectorAlertRules': 'Alerts.svg',
-    'applicationGateways': 'Application-Gateways.svg',
-    'applicationSecurityGroups': 'Application-Security-Groups.svg',
-    'automationAccounts': 'Automation-Accounts.svg',
-    'availabilitySets': 'Availability-Sets.svg',
-    'backupPolicies': 'Azure-Backup-Center.svg',
-    'bastionHosts': 'Bastions.svg',
-    'batchAccounts': 'Batch-Accounts.svg',
-    'blueprints': 'Blueprints.svg',
-    'firewalls': 'Firewalls.svg',
-    'ddosProtectionPlans': 'DDoS-Protection-Plans.svg',
-    'dnsZones': 'DNS-Zones.svg',
-    'expressRouteCircuits': 'ExpressRoute-Circuits.svg',
-    'networkWatchers': 'Network-Watcher.svg',
-    'trafficmanagerprofiles': 'Traffic-Manager-Profiles.svg',
-    'serverFarms': 'App-Service-Plans.svg',
-    'workspaces': 'Log-Analytics-Workspaces.svg',
-    'components': 'Function-Apps.svg',
-    'actiongroups': 'Detonation.svg',
-    'alertRules': 'Alerts.svg',
-    'activityLogAlerts': 'Alerts.svg',
-    'b2cDirectories': 'Azure-AD-B2C.svg',
-    'userAssignedIdentities': 'Entra-Managed-Identities.svg',
-    'flexibleServers': 'SQL-Server.svg',
-    'Resource Group': 'Resource-Groups.svg',
-    'Subscriptions': 'Subscriptions.svg',
-}
+from azure_func.icons import describe
+from azure_func.inventory import Inventory
 
 
-def get_resource_name(details):
-    if isinstance(details, dict):
-        return str(details.get('name', 'Unknown'))
-    elif isinstance(details, list) and details:
-        # If Details is a list, try to get name from first item
-        if isinstance(details[0], dict):
-            return str(details[0].get('name', 'Unknown'))
-    return 'Unknown'
+def _escape(text):
+    """Escape text for a quoted mermaid label (mermaid uses #name; entity codes)."""
+    text = str(text).replace('#', '#35;').replace('&', '#amp;')
+    return text.replace('<', '#lt;').replace('>', '#gt;').replace('"', '#quot;')
 
-# json2mermaid.py
+
+def _icon_html(icon_stem, width):
+    return f"<img src='./icons/{quote(icon_stem)}.svg' width='{width}'/><br>"
+
 
 def generate_mermaid_flowchart(data):
+    """Subscription -> resource group -> resource -> child resource flowchart."""
+    inventory = Inventory(data)
     mermaid_code = ["graph LR;"]  # Using Left to Right layout
-    sub_html = f'<img src="./icons/Subscriptions.svg" width="16"/><br>'
-    rg_html = f'<img src="./icons/Resource-Groups.svg" width="32"/><br>'
+    node_ids = {}
 
-    for subscription_id, subscription_data in data['Objects'].items():
-        sub_id = f"sub_{subscription_id.replace('-', '_').replace(' ', '_')}"
-        mermaid_code.append(f'{sub_id}["{sub_html}<b>Subscription:</b><br>{subscription_id}"]')
+    by_group = {}
+    for node in inventory.nodes.values():
+        by_group.setdefault((node.subscription_id, node.resource_group), []).append(node)
 
-        for rg_name, resources in subscription_data.items():
-            rg_id = f"rg_{rg_name.replace('-', '_').replace(' ', '_')}"
-            mermaid_code.append(f'{rg_id}["{rg_html}<b>Resource Group:</b><br>{rg_name}"]')
+    for sub_index, (subscription_id, subscription_data) in enumerate((data.get('Objects') or {}).items(), start=1):
+        sub_id = f"sub{sub_index}"
+        sub_name = _escape(inventory.subscription_name(subscription_id))
+        sub_label = f"{_icon_html('Subscriptions', 24)}<b>Subscription:</b><br>{sub_name}"
+        if sub_name != _escape(subscription_id):
+            sub_label += f"<br>{_escape(subscription_id)}"
+        mermaid_code.append(f'{sub_id}["{sub_label}"]')
+
+        for rg_index, rg_name in enumerate(subscription_data, start=1):
+            rg_id = f"{sub_id}_rg{rg_index}"
+            mermaid_code.append(f'{rg_id}["{_icon_html("Resource-Groups", 32)}<b>Resource Group:</b><br>{_escape(rg_name)}"]')
             mermaid_code.append(f"{sub_id} --> {rg_id}")
 
-            for resource in resources:
-                # Get resource name and type
-                resource_name = get_resource_name(resource['Details'])
-                resource_type_full = resource['ResourceType']
-                resource_type_parts = resource_type_full.split('/')
-                # Handle cases where resource type may not have expected structure
-                if len(resource_type_parts) >= 2:
-                    resource_type_key = resource_type_parts[-1]
-                else:
-                    resource_type_key = resource_type_full
-
-                # Map resource type to icon
-                icon_filename = ICON_MAPPING.get(resource_type_key)
-                if icon_filename:
-                    icon_path = f'./icons/{icon_filename}' 
-                    icon_html = f'<img src="{icon_path}" width="48"/><br>'
-                else:
-                    icon_html = ''
-
-                # Create node with icon
-                resource_id = f"res_{resource_name.replace('-', '_').replace(' ', '_')}"
-                resource_label = f"{icon_html}<b>{resource_type_key}:</b><br>{resource_name}"
-                mermaid_code.append(f'{resource_id}["{resource_label}"]')
-                mermaid_code.append(f"{rg_id} --> {resource_id}")
+            nodes = sorted(by_group.get((subscription_id, rg_name), []), key=lambda n: (n.type_lower, n.name.lower()))
+            for node in nodes:
+                node_ids[node.key] = f"{rg_id}_n{len(node_ids) + 1}"
+            for node in nodes:
+                sku = node.detail.get('sku')
+                icon_stem, type_name = describe(node.type, node.kind, sku.get('name', '') if isinstance(sku, dict) else '')
+                name = node.name.rsplit('/', 1)[-1]
+                label = f"{_icon_html(icon_stem, 48)}<b>{_escape(type_name)}:</b><br>{_escape(name)}"
+                mermaid_code.append(f'{node_ids[node.key]}["{label}"]')
+                # Child resources hang off their parent, everything else off the resource group
+                parent_id = node_ids.get(node.parent.key) if node.parent is not None else None
+                mermaid_code.append(f"{parent_id or rg_id} --> {node_ids[node.key]}")
 
     return "\n".join(mermaid_code)
 

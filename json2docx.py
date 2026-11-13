@@ -2,6 +2,7 @@ from docx import Document
 from docx.shared import Pt, Inches
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
+import os
 import re
 
 def create_document():
@@ -36,13 +37,11 @@ def add_subscription_table(doc, data):
     hdr_cells = table.rows[0].cells
     hdr_cells[0].text = 'Subscription ID'
     hdr_cells[1].text = 'Name'
+    names = data.get('Subscriptions') or {}
     for subscription in subscriptions:
         row_cells = table.add_row().cells
         row_cells[0].text = subscription
-        if 'name' in subscriptions[subscription]:
-            row_cells[1].text = subscriptions[subscription]['name']
-        else:
-            row_cells[1].text = 'Name not found'
+        row_cells[1].text = (names.get(subscription) or {}).get('displayName') or 'Name not found'
 
         # Reduce paragraph spacing
         for cell in row_cells:
@@ -60,7 +59,8 @@ def add_resource_group_table(doc, data):
     hdr_cells[0].text = 'Subscription ID'
     hdr_cells[1].text = 'Resource Group'
 
-    resource_groups = set()
+    # Start from the resource groups themselves so empty ones are listed too
+    resource_groups = {(subscription_id, rg_name) for subscription_id in objects for rg_name in objects[subscription_id]}
 
     for subscription_id in objects:
         for user_name, resources in objects[subscription_id].items():
@@ -85,7 +85,12 @@ def add_resource_group_table(doc, data):
                     # Handle any other cases if necessary
                     pass
 
+    # Resource ids do not always use the same casing as the resource group itself
+    unique = {}
     for subscription_id, rg in resource_groups:
+        unique.setdefault((subscription_id, rg.lower()), rg)
+
+    for (subscription_id, _), rg in sorted(unique.items()):
         row_cells = table.add_row().cells
         row_cells[0].text = subscription_id
         row_cells[1].text = rg
@@ -172,7 +177,11 @@ def format_resource_type(resource_type):
 
 def add_heading(doc, resource_type, resource_name, level=3):
     # Add resource type and name as a heading
-    doc.add_heading(f"{resource_type} - {resource_name}", level)
+    doc.add_heading(f"{resource_type} - {resource_name}", heading_level(level))
+
+def heading_level(level):
+    # Word has nine heading levels; deeply nested properties share the last one
+    return min(level, 9)
 
 def add_dict_as_table(doc, value, level):
     if isinstance(value, dict):
@@ -180,13 +189,13 @@ def add_dict_as_table(doc, value, level):
         set_column_widths_oxml(table, [3500, 250])
         for attr, val in value.items():
             if isinstance(val, (dict, list)):
-                doc.add_heading(format_attribute(attr), level+1)
+                doc.add_heading(format_attribute(attr), heading_level(level+1))
                 add_dict_as_table(doc, val, level+1)
             else:
                 add_row_to_table(table, attr, val)
     elif isinstance(value, list):
         for index, item in enumerate(value):
-            doc.add_heading(f"Item {index+1}", level+1)
+            doc.add_heading(f"Item {index+1}", heading_level(level+1))
             add_dict_as_table(doc, item, level+1)
     else:
         # Handle other data types if necessary
@@ -220,4 +229,4 @@ def generate_word_document(data, output_folder):
     add_subscription_table(doc, data)
     add_resource_group_table(doc, data)
     add_resource_tables(doc, data)
-    doc.save(f'{output_folder}/output.docx')
+    doc.save(os.path.join(output_folder, 'output.docx'))

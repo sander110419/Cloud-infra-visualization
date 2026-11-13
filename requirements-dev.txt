@@ -1,0 +1,3 @@
+# Running the test suite
+-r requirements.txt
+pytest>=8
