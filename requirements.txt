@@ -2,5 +2,5 @@
 azure-identity>=1.15
 azure-core>=1.30
 pandas>=2.0
-openpyxl>=3.1
+openpyxl>=3.1.5
 python-docx>=1.1
