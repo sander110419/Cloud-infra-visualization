@@ -1,5 +1,5 @@
 # Command line tool (main.py)
-azure-identity>=1.15
+azure-identity>=1.27.0
 azure-core>=1.30
 pandas>=2.0
 openpyxl>=3.1
